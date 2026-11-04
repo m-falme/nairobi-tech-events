@@ -55,7 +55,7 @@ export async function editAndApproveCore(
   const { id, ...data } = parsed.data;
   const { count } = await deps.db.event.updateMany({
     where: { id, status: "pending" },
-    data: { ...data, status: "approved" },
+    data: { ...data, status: "approved", adminEditedAt: new Date() },
   });
   return count === 0 ? { ok: false, error: NOT_PENDING } : { ok: true };
 }

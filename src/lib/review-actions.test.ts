@@ -90,6 +90,7 @@ describe("editAndApproveCore", () => {
     const arg = updateMany.mock.calls[0][0];
     expect(arg.where).toEqual({ id, status: "pending" });
     expect(arg.data.status).toBe("approved");
+    expect(arg.data.adminEditedAt).toBeInstanceOf(Date);
     expect(arg.data.startsAt).toEqual(new Date("2026-11-10T15:00:00Z"));
   });
   it("returns an error when count is 0 (already reviewed)", async () => {
