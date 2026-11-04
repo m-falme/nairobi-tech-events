@@ -1,6 +1,6 @@
 # Event Sources — Nairobi Tech Events Board
 
-Last checked: 2026-11-04 (robots.txt files re-fetched 2026-11-04)
+Last checked: 2026-11-05 (Luma approval recorded; robots.txt files re-fetched 2026-11-04)
 
 **Policy: no scraping.** We use only official APIs or official feeds (iCal/RSS) that the platform publishes. Where neither is available or affordable on free tiers, an admin enters the event manually with a link back to the original listing. No HTML scraping, no headless browsers, no bypassing bot protection. This file is docs only; it records which sources the importer (PR 8) may use.
 
@@ -37,8 +37,8 @@ Last checked: 2026-11-04 (robots.txt files re-fetched 2026-11-04)
 - **Official API:** [Getting Started](https://docs.luma.com/reference/getting-started-with-your-api). **Requires Luma Plus (paid)** and is scoped to calendars _you manage_. Not used.
 - **Official feed (checked 2026-11-04):** [iCal Syncing help](https://help.luma.com/p/ical-syncing) states "Luma offers iCal subscriptions" and that a Luma Calendar's sidebar **Add iCal Subscription** feed "includes all published events on that calendar". Feed URL: `https://api.lu.ma/ics/get?entity=calendar&id=<cal-id>`. The help page describes subscriptions for personal calendar apps (Google Calendar, Apple Calendar, Outlook), not third-party republishing.
 - **robots.txt (checked 2026-11-04):** `https://lu.ma/robots.txt` redirects to `https://luma.com/robots.txt`, which has rules only for `User-agent: Googlebot` (`/social-share`, `/in/`, `/company/`, `/session-*`) and no `User-agent: *` group. `https://api.lu.ma/robots.txt` has `User-agent: *` with only `Disallow: /insights/`. `/ics` is not disallowed.
-- **Terms/robots allow our method:** Unverified. robots.txt does not disallow `/ics`, but the terms permit republishing only under the bona-fide-use exception above.
-- **Automated access:** Verified, approved by Mark on 2026-11-05 (relayed by Control-Centre via Forge Lead), on the basis of bona fide use through Luma's public iCal interface.
+- **Terms/robots allow our method:** Yes, on Mark's approval (2026-11-05, relayed), under the bona-fide-use exception; Luma itself has not confirmed. robots.txt does not disallow `/ics`.
+- **Automated access:** Verified. Mark: "Yes, approve the Luma iCal import, text only" (2026-11-05, relayed by Control-Centre via Forge Lead), on the basis of bona fide use through Luma's public iCal interface.
 - **Conditions:** text fields only, no images; every event links back to its official Luma page; poll each feed at most every 6 hours; scheduled import off in production until launch approval.
 - **Method:** official iCal feed per calendar, `https://api.lu.ma/ics/get?entity=calendar&id=<cal-id>`, low volume.
 - **Fallback:** manual entry / submissions with a link to the Luma event.
@@ -47,12 +47,12 @@ Last checked: 2026-11-04 (robots.txt files re-fetched 2026-11-04)
 
 Calendar IDs were taken from the public calendar page data, then the ICS URL was fetched once to confirm `text/calendar` and the calendar name. These are the same IDs the Add iCal Subscription button exposes, but that is not consent to republish. The importer only pulls calendars with Status **approved**, meaning approved by the calendar's organizer or by Mark, with who approved and when recorded in this table.
 
-| Name                       | Calendar page                                                            | Calendar ID           | ICS verified                                                | Date       | Status                      |
-| -------------------------- | ------------------------------------------------------------------------ | --------------------- | ----------------------------------------------------------- | ---------- | --------------------------- |
-| Tech Kenya Events Calendar | [luma.com/techkenya](https://luma.com/techkenya)                         | `cal-tNFqmDwu6YpmOOJ` | Yes (`text/calendar`, X-WR-CALNAME matches, 73 events)      | 2026-11-04 | approved (Mark, 2026-11-05) |
-| QuantumKE                  | [luma.com/quantumke](https://luma.com/quantumke)                         | `cal-Cpt1V9LBIY4ETmr` | Yes (`text/calendar`, X-WR-CALNAME matches, 10 events)      | 2026-11-04 | approved (Mark, 2026-11-05) |
-| Nairobi (Discover city)    | [luma.com/nairobi](https://luma.com/nairobi)                             | to collect            | No (city page, not a calendar; general, not tech-only)      | 2026-11-04 | candidate                   |
-| Tech Events in Nairobi     | [luma.com/discover/nairobi/tech](https://luma.com/discover/nairobi/tech) | to collect            | No (Discover category page; organiser calendars to collect) | 2026-11-04 | candidate                   |
+| Name                       | Calendar page                                                            | Calendar ID           | ICS verified                                                | Date       | Status                                              |
+| -------------------------- | ------------------------------------------------------------------------ | --------------------- | ----------------------------------------------------------- | ---------- | --------------------------------------------------- |
+| Tech Kenya Events Calendar | [luma.com/techkenya](https://luma.com/techkenya)                         | `cal-tNFqmDwu6YpmOOJ` | Yes (`text/calendar`, X-WR-CALNAME matches, 73 events)      | 2026-11-04 | approved (Mark, 2026-11-05, relayed via Forge Lead) |
+| QuantumKE                  | [luma.com/quantumke](https://luma.com/quantumke)                         | `cal-Cpt1V9LBIY4ETmr` | Yes (`text/calendar`, X-WR-CALNAME matches, 10 events)      | 2026-11-04 | approved (Mark, 2026-11-05, relayed via Forge Lead) |
+| Nairobi (Discover city)    | [luma.com/nairobi](https://luma.com/nairobi)                             | to collect            | No (city page, not a calendar; general, not tech-only)      | 2026-11-04 | candidate                                           |
+| Tech Events in Nairobi     | [luma.com/discover/nairobi/tech](https://luma.com/discover/nairobi/tech) | to collect            | No (Discover category page; organiser calendars to collect) | 2026-11-04 | candidate                                           |
 
 ## GDG (Google Developer Groups, on Bevy)
 
