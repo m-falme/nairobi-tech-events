@@ -37,6 +37,11 @@ export default async function Home({
       <p className="mt-2 text-gray-700">
         Upcoming hackathons, meetups, workshops and conferences in Nairobi.
       </p>
+      <p className="mt-2">
+        <Link href="/submit" className={`underline ${focus}`}>
+          Submit an event
+        </Link>
+      </p>
 
       <form
         method="get"

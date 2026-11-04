@@ -8,7 +8,7 @@ export const loginSchema = z.object({
 
 export const idSchema = z.object({ id: z.string().uuid() });
 
-const httpUrl = z
+export const httpUrl = z
   .string()
   .trim()
   .max(2000)
@@ -20,7 +20,7 @@ const httpUrl = z
     }
   }, "Must be a valid http(s) URL");
 
-const optionalText = (max: number) =>
+export const optionalText = (max: number) =>
   z
     .string()
     .trim()
@@ -30,7 +30,7 @@ const optionalText = (max: number) =>
     .optional();
 
 /** datetime-local value interpreted as Nairobi time (EAT, UTC+3). */
-const eatDateTime = z
+export const eatDateTime = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, "Use YYYY-MM-DDTHH:MM")
   .transform((s) => new Date(`${s}:00+03:00`))
