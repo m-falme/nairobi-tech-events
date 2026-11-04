@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SourceKind {
+  ical
+  rss
+  api
+  manual
+}
+
+enum EventType {
+  hackathon
+  meetup
+  workshop
+  conference
+  other
+}
+
+enum EventStatus {
+  pending
+  approved
+  rejected
+}
+
+model Source {
+  id            String      @id @default(uuid()) @db.Uuid
+  name          String
+  kind          SourceKind
+  url           String?
+  trusted       Boolean     @default(false)
+  active        Boolean     @default(true)
+  termsNote     String      @map("terms_note")
+  lastFetchedAt DateTime?   @map("last_fetched_at") @db.Timestamptz(6)
+  lastError     String?     @map("last_error")
+  events        Event[]
+  importRuns    ImportRun[]
+
+  @@map("sources")
+}
+
+model Event {
+  id               String      @id @default(uuid()) @db.Uuid
+  sourceId         String?     @map("source_id") @db.Uuid
+  source           Source?     @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  externalId       String?     @map("external_id")
+  title            String
+  description      String      @default("")
+  startsAt         DateTime    @map("starts_at") @db.Timestamptz(6)
+  endsAt           DateTime?   @map("ends_at") @db.Timestamptz(6)
+  timezone         String      @default("Africa/Nairobi")
+  venue            String?
+  isOnline         Boolean     @default(false) @map("is_online")
+  type             EventType
+  url              String
+  organiser        String?
+  status           EventStatus @default(pending)
+  submittedByEmail String?     @map("submitted_by_email")
+  createdAt        DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([sourceId, externalId])
+  @@index([status, startsAt])
+  @@map("events")
+}
+
+model Admin {
+  id           String @id @default(uuid()) @db.Uuid
+  email        String @unique
+  passwordHash String @map("password_hash")
+
+  @@map("admins")
+}
+
+model ImportRun {
+  id         String    @id @default(uuid()) @db.Uuid
+  sourceId   String    @map("source_id") @db.Uuid
+  source     Source    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  startedAt  DateTime  @default(now()) @map("started_at") @db.Timestamptz(6)
+  finishedAt DateTime? @map("finished_at") @db.Timestamptz(6)
+  added      Int       @default(0)
+  updated    Int       @default(0)
+  error      String?
+
+  @@map("import_runs")
+}
