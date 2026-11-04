@@ -51,7 +51,10 @@ export async function addSourceCore(
   const parsed = sourceSchema.safeParse(raw);
   if (!parsed.success)
     return {
-      errors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+      errors: z.flattenError(parsed.error).fieldErrors as Record<
+        string,
+        string[]
+      >,
       values: raw,
     };
   await deps.db.source.create({

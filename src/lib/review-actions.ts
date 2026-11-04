@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { assertAdmin, type MaybeSession } from "./authz";
 import { editSchema, formToObject, idSchema } from "./review";
 
@@ -50,7 +51,10 @@ export async function editAndApproveCore(
   if (!parsed.success)
     return {
       ok: false,
-      errors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+      errors: z.flattenError(parsed.error).fieldErrors as Record<
+        string,
+        string[]
+      >,
     };
   const { id, ...data } = parsed.data;
   const { count } = await deps.db.event.updateMany({

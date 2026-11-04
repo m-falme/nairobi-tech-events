@@ -2,14 +2,14 @@ import { z } from "zod";
 import { EVENT_TYPES } from "./filters";
 
 export const loginSchema = z.object({
-  email: z.string().trim().toLowerCase().email().max(200),
+  email: z.string().trim().toLowerCase().pipe(z.email().max(200)),
   password: z
     .string()
     .min(1, "Password is required")
     .max(200, "Password is too long"),
 });
 
-export const idSchema = z.object({ id: z.string().uuid() });
+export const idSchema = z.object({ id: z.uuid() });
 
 export const httpUrl = z
   .string()
@@ -39,9 +39,15 @@ export const eatDateTime = z
   .transform((s) => new Date(`${s}:00+03:00`))
   .refine((d) => !Number.isNaN(d.getTime()), "Invalid date");
 
+/** Checkbox value: "on" when ticked, absent/"" otherwise. */
+export const checkbox = z
+  .union([z.literal("on"), z.literal("")])
+  .optional()
+  .transform((v) => v === "on");
+
 export const editSchema = z
   .object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     title: z
       .string()
       .trim()
@@ -55,10 +61,7 @@ export const editSchema = z
       .transform((v) => (v === "" || v === undefined ? null : v)),
     venue: optionalText(200),
     organiser: optionalText(200),
-    isOnline: z
-      .union([z.literal("on"), z.literal("")])
-      .optional()
-      .transform((v) => v === "on"),
+    isOnline: checkbox,
     type: z.enum(EVENT_TYPES),
     url: httpUrl,
   })

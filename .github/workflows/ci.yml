@@ -50,6 +50,57 @@ jobs:
         run: npx prisma migrate deploy
       - run: npm run build
 
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: events_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d events_e2e"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # CI-only throwaway values; not real secrets.
+      DATABASE_URL: postgresql://ci:ci-only-password@localhost:5432/events_e2e
+      ADMIN_SEED_EMAIL: admin@example.com
+      ADMIN_SEED_PASSWORD: ci-only-admin-password
+      AUTH_SECRET: ci-only-auth-secret-not-for-production
+      AUTH_TRUST_HOST: "true"
+      SITE_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Migrate and seed
+        run: |
+          npx prisma migrate deploy
+          npx prisma db seed
+      - run: npm run build
+      - name: Playwright (chromium)
+        run: npm run test:e2e
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
   docker:
     runs-on: ubuntu-latest
     timeout-minutes: 20

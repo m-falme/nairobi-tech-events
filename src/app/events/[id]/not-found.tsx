@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { buildEventMetadata } from "@/lib/event-detail";
+
+export const metadata: Metadata = {
+  ...buildEventMetadata(null),
+  robots: { index: false },
+};
 
 export default function EventNotFound() {
   return (
