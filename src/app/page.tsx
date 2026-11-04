@@ -8,7 +8,6 @@ import {
   type RawSearchParams,
 } from "@/lib/filters";
 import { formatEventDate } from "@/lib/format";
-import { safeHref } from "@/lib/url";
 
 const focus =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700";
@@ -167,19 +166,12 @@ export default async function Home({
             <li key={e.id} className="rounded border p-4">
               <article>
                 <h2 className="text-lg font-semibold">
-                  {safeHref(e.url) ? (
-                    <a
-                      href={safeHref(e.url)!}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                      className={`underline ${focus}`}
-                    >
-                      {e.title}
-                      <span className="sr-only"> (opens in new tab)</span>
-                    </a>
-                  ) : (
-                    e.title
-                  )}
+                  <Link
+                    href={`/events/${e.id}`}
+                    className={`underline ${focus}`}
+                  >
+                    {e.title}
+                  </Link>
                 </h2>
                 <p className="text-sm text-gray-700">
                   <time dateTime={e.startsAt.toISOString()}>

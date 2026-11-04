@@ -5,26 +5,23 @@ export async function listEvents(f: EventFilters, now: Date = new Date()) {
   const where = buildWhere(f, now);
   const count = await prisma.event.count({ where });
   const page = clampPage(f.page, count);
-  const [events] = await prisma.$transaction([
-    prisma.event.findMany({
-      where,
-      orderBy: [{ startsAt: "asc" }, { id: "asc" }],
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-      select: {
-        id: true,
-        title: true,
-        startsAt: true,
-        endsAt: true,
-        venue: true,
-        isOnline: true,
-        type: true,
-        url: true,
-        organiser: true,
-        source: { select: { name: true } },
-      },
-    }),
-  ]);
+  const events = await prisma.event.findMany({
+    where,
+    orderBy: [{ startsAt: "asc" }, { id: "asc" }],
+    skip: (page - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
+    select: {
+      id: true,
+      title: true,
+      startsAt: true,
+      endsAt: true,
+      venue: true,
+      isOnline: true,
+      type: true,
+      organiser: true,
+      source: { select: { name: true } },
+    },
+  });
   return { events, count, page };
 }
 

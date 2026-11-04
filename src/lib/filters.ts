@@ -95,7 +95,12 @@ export function dateRange(
   return { start, end };
 }
 
-/** Escape LIKE wildcards so user search text matches literally. */
+/**
+ * Escape LIKE wildcards so user search text matches literally.
+ * Prisma's `contains` maps to Postgres ILIKE '%value%' without escaping
+ * `%`, `_` or `\` in the value, so a search for "100%" or "a_b" would
+ * otherwise act as a wildcard pattern.
+ */
 export function escapeLike(q: string): string {
   return q.replace(/[\\%_]/g, (c) => `\\${c}`);
 }
