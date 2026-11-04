@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { escapeLike } from "@/lib/filters";
 import { findDuplicates, urlHost } from "@/lib/duplicates";
 import { formatEventDate } from "@/lib/format";
 import { focus } from "@/lib/ui";
@@ -7,7 +8,12 @@ import { approveEvent, rejectEvent } from "./actions";
 
 const DAY = 24 * 3600_000;
 
-export default async function ReviewQueue() {
+export default async function ReviewQueue({
+  searchParams,
+}: {
+  searchParams: Promise<{ notice?: string }>;
+}) {
+  const { notice } = await searchParams;
   const pending = await prisma.event.findMany({
     where: { status: "pending" },
     orderBy: { startsAt: "asc" },
@@ -25,7 +31,7 @@ export default async function ReviewQueue() {
           status: { not: "rejected" },
           OR: [
             ...hosts.map((h) => ({
-              url: { contains: h, mode: "insensitive" as const },
+              url: { contains: escapeLike(h), mode: "insensitive" as const },
             })),
             {
               startsAt: {
@@ -45,6 +51,15 @@ export default async function ReviewQueue() {
   return (
     <main className="mt-6">
       <h1 className="text-2xl font-bold">Pending events ({total})</h1>
+      {notice === "not-pending" && (
+        <p
+          role="alert"
+          className="mt-3 rounded border border-amber-500 bg-amber-50 p-2"
+        >
+          That event was no longer pending (already reviewed?). Nothing was
+          changed.
+        </p>
+      )}
       {total > pending.length && (
         <p className="mt-1 text-sm text-gray-700">
           Showing {pending.length} of {total} (soonest first).

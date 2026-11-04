@@ -18,13 +18,15 @@ function refresh() {
 }
 
 export async function approveEvent(fd: FormData) {
-  await setStatusCore(deps, fd, "approved");
+  const r = await setStatusCore(deps, fd, "approved");
   refresh();
+  if (!r.ok) redirect("/admin?notice=not-pending");
 }
 
 export async function rejectEvent(fd: FormData) {
-  await setStatusCore(deps, fd, "rejected");
+  const r = await setStatusCore(deps, fd, "rejected");
   refresh();
+  if (!r.ok) redirect("/admin?notice=not-pending");
 }
 
 export type EditState = { error?: string; errors?: Record<string, string[]> };
