@@ -1,11 +1,197 @@
-export default function Home() {
+import Link from "next/link";
+import { listEvents } from "@/lib/events";
+import {
+  EVENT_TYPES,
+  parseFilters,
+  toQueryString,
+  totalPages,
+  type RawSearchParams,
+} from "@/lib/filters";
+import { formatEventDate } from "@/lib/format";
+
+export const dynamic = "force-dynamic";
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<RawSearchParams>;
+}) {
+  const filters = parseFilters(await searchParams);
+  const { events, count } = await listEvents(filters);
+  const pages = totalPages(count);
+  const page = Math.min(filters.page, pages);
+  const hasFilters = Boolean(
+    filters.q || filters.type || filters.format || filters.from || filters.to,
+  );
+
   return (
     <main className="mx-auto max-w-3xl p-8">
       <h1 className="text-3xl font-bold">Nairobi Tech Events</h1>
-      <p className="mt-4 text-gray-600">
+      <p className="mt-2 text-gray-700">
         Upcoming hackathons, meetups, workshops and conferences in Nairobi.
-        Coming soon.
       </p>
+
+      <form
+        method="get"
+        role="search"
+        aria-label="Filter events"
+        className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2"
+      >
+        <div className="sm:col-span-2">
+          <label htmlFor="q" className="block text-sm font-medium">
+            Search
+          </label>
+          <input
+            id="q"
+            name="q"
+            type="search"
+            defaultValue={filters.q ?? ""}
+            maxLength={100}
+            className="mt-1 w-full rounded border px-2 py-1"
+          />
+        </div>
+        <div>
+          <label htmlFor="type" className="block text-sm font-medium">
+            Type
+          </label>
+          <select
+            id="type"
+            name="type"
+            defaultValue={filters.type ?? ""}
+            className="mt-1 w-full rounded border px-2 py-1"
+          >
+            <option value="">All types</option>
+            {EVENT_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {t[0].toUpperCase() + t.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="format" className="block text-sm font-medium">
+            Format
+          </label>
+          <select
+            id="format"
+            name="format"
+            defaultValue={filters.format ?? ""}
+            className="mt-1 w-full rounded border px-2 py-1"
+          >
+            <option value="">Online and in person</option>
+            <option value="online">Online</option>
+            <option value="in-person">In person</option>
+          </select>
+        </div>
+        <div>
+          <label htmlFor="from" className="block text-sm font-medium">
+            From
+          </label>
+          <input
+            id="from"
+            name="from"
+            type="date"
+            defaultValue={filters.from ?? ""}
+            className="mt-1 w-full rounded border px-2 py-1"
+          />
+        </div>
+        <div>
+          <label htmlFor="to" className="block text-sm font-medium">
+            To
+          </label>
+          <input
+            id="to"
+            name="to"
+            type="date"
+            defaultValue={filters.to ?? ""}
+            className="mt-1 w-full rounded border px-2 py-1"
+          />
+        </div>
+        <div className="flex gap-3 sm:col-span-2">
+          <button
+            type="submit"
+            className="rounded bg-blue-700 px-4 py-1 text-white hover:bg-blue-800 focus:outline-2 focus:outline-offset-2"
+          >
+            Apply filters
+          </button>
+          {hasFilters && (
+            <Link href="/" className="self-center underline">
+              Clear filters
+            </Link>
+          )}
+        </div>
+      </form>
+
+      <p className="mt-6 text-sm text-gray-700" aria-live="polite">
+        {count} upcoming {count === 1 ? "event" : "events"}
+      </p>
+
+      {events.length === 0 ? (
+        <div className="mt-4 rounded border border-dashed p-6 text-center">
+          <h2 className="text-lg font-semibold">No events found</h2>
+          <p className="mt-1 text-gray-700">
+            {hasFilters
+              ? "Try removing some filters."
+              : "No upcoming events yet. Check back soon."}
+          </p>
+        </div>
+      ) : (
+        <ul className="mt-4 space-y-4" aria-label="Upcoming events">
+          {events.map((e) => (
+            <li key={e.id} className="rounded border p-4">
+              <article>
+                <h2 className="text-lg font-semibold">
+                  <a href={e.url} rel="noopener noreferrer" target="_blank">
+                    {e.title}
+                  </a>
+                </h2>
+                <p className="text-sm text-gray-700">
+                  <time dateTime={e.startsAt.toISOString()}>
+                    {formatEventDate(e.startsAt)}
+                  </time>
+                  {" · "}
+                  {e.isOnline ? "Online" : (e.venue ?? "In person")}
+                  {" · "}
+                  <span className="capitalize">{e.type}</span>
+                </p>
+                {e.organiser && (
+                  <p className="text-sm text-gray-700">By {e.organiser}</p>
+                )}
+              </article>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {pages > 1 && (
+        <nav aria-label="Pagination" className="mt-6 flex justify-between">
+          {page > 1 ? (
+            <Link
+              href={`/${toQueryString(filters, { page: page - 1 })}`}
+              rel="prev"
+              className="underline"
+            >
+              Previous
+            </Link>
+          ) : (
+            <span />
+          )}
+          <span aria-current="page">
+            Page {page} of {pages}
+          </span>
+          {page < pages ? (
+            <Link
+              href={`/${toQueryString(filters, { page: page + 1 })}`}
+              rel="next"
+              className="underline"
+            >
+              Next
+            </Link>
+          ) : (
+            <span />
+          )}
+        </nav>
+      )}
     </main>
   );
 }
