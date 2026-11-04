@@ -46,8 +46,8 @@ export type ImportDb = {
   event: {
     findUnique(args: {
       where: { sourceId_externalId: Key };
-      select: { id: true };
-    }): Promise<{ id: string } | null>;
+      select: { id: true; adminEditedAt: true };
+    }): Promise<{ id: string; adminEditedAt: Date | null } | null>;
     create(args: {
       data: ImportedEvent & {
         sourceId: string;
@@ -133,6 +133,7 @@ export async function runImport(deps: ImportDeps): Promise<SourceResult[]> {
     let added = 0;
     let updated = 0;
     let skipped = 0;
+    let unchanged = 0;
     try {
       const adapter = adapters[source.kind];
       if (!adapter) throw new Error(`No adapter for ${source.kind}`);
@@ -142,9 +143,12 @@ export async function runImport(deps: ImportDeps): Promise<SourceResult[]> {
           const { externalId, ...fields } = item;
           const existing = await deps.db.event.findUnique({
             where: { sourceId_externalId: { sourceId: source.id, externalId } },
-            select: { id: true },
+            select: { id: true, adminEditedAt: true },
           });
-          if (existing) {
+          if (existing?.adminEditedAt) {
+            // An admin edited this event: keep their text/times untouched.
+            unchanged++;
+          } else if (existing) {
             // Refresh text/time fields; never override an admin's status.
             await deps.db.event.update({
               where: { id: existing.id },
@@ -177,7 +181,7 @@ export async function runImport(deps: ImportDeps): Promise<SourceResult[]> {
       });
       results.push({ ...base, status: "success", added, updated, skipped });
       log(
-        `[${source.name}] added ${added}, updated ${updated}, skipped ${skipped}`,
+        `[${source.name}] added ${added}, updated ${updated}, kept admin edits ${unchanged}, skipped ${skipped}`,
       );
     } catch (e) {
       const error = errMsg(e);

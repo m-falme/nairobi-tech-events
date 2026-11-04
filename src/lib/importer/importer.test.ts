@@ -3,7 +3,12 @@ import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { rssAdapter } from "./adapters";
 import { approvedLumaCalendar, isImportAllowed, lumaIcsUrl } from "./allowlist";
-import { DEFAULT_USER_AGENT, fetchText } from "./fetch";
+import {
+  DEFAULT_USER_AGENT,
+  fetchText,
+  MAX_BYTES,
+  parseRetryAfter,
+} from "./fetch";
 import { eventPageUrl, inferType, parseIcs } from "./ical";
 import { MIN_INTERVAL_MS, runImport, type ImportDb } from "./run";
 import { toPlainText } from "./text";
@@ -112,14 +117,17 @@ describe("rss adapter", () => {
 });
 
 describe("fetchText", () => {
+  const FEED = lumaIcsUrl(TK);
   const res = (
     status: number,
-    body = "",
+    body: BodyInit | null = "",
     headers: Record<string, string> = {},
   ) => new Response(body, { status, headers });
-  it("sends our User-Agent and returns the body", async () => {
+  const noSleep = vi.fn(async () => {});
+
+  it("sends our User-Agent, manual redirects and a timeout", async () => {
     const f = vi.fn(async () => res(200, "BEGIN:VCALENDAR"));
-    const body = await fetchText("https://api.lu.ma/x", {
+    const body = await fetchText(FEED, {
       fetchImpl: f as unknown as typeof fetch,
     });
     expect(body).toBe("BEGIN:VCALENDAR");
@@ -127,17 +135,108 @@ describe("fetchText", () => {
     expect((init.headers as Record<string, string>)["User-Agent"]).toBe(
       DEFAULT_USER_AGENT,
     );
+    expect(init.redirect).toBe("manual");
     expect(init.signal).toBeInstanceOf(AbortSignal);
   });
-  it("backs off exponentially, honours Retry-After, then succeeds", async () => {
+
+  it("refuses a non-allowlisted initial URL without fetching", async () => {
+    const f = vi.fn();
+    await expect(
+      fetchText("https://example.com/x.ics", { fetchImpl: f }),
+    ).rejects.toThrow(/not allowed/);
+    expect(f).not.toHaveBeenCalled();
+  });
+
+  it("follows redirects that stay on the allowlist", async () => {
+    const qk = lumaIcsUrl(QK);
+    const f = vi
+      .fn()
+      .mockResolvedValueOnce(res(302, null, { location: qk }))
+      .mockResolvedValueOnce(res(200, "BEGIN:VCALENDAR"));
+    expect(await fetchText(FEED, { fetchImpl: f })).toBe("BEGIN:VCALENDAR");
+    expect(f.mock.calls[1][0]).toBe(qk);
+  });
+
+  it.each([
+    ["other host", "https://evil.example/ics/get?entity=calendar&id=" + TK],
+    ["other calendar", "https://api.lu.ma/ics/get?entity=calendar&id=cal-x"],
+    ["http downgrade", "http://api.lu.ma/ics/get?entity=calendar&id=" + TK],
+    ["other path", "/ics/other?entity=calendar&id=" + TK],
+  ])("fails when a redirect hop goes to %s", async (_n, loc) => {
+    const f = vi.fn().mockResolvedValueOnce(res(301, null, { location: loc }));
+    await expect(
+      fetchText(FEED, { fetchImpl: f, sleep: noSleep }),
+    ).rejects.toThrow(/not allowed/);
+    expect(f).toHaveBeenCalledTimes(1);
+  });
+
+  it("fails after more than 3 redirects", async () => {
+    const f = vi.fn(async () => res(302, null, { location: FEED }));
+    await expect(
+      fetchText(FEED, {
+        fetchImpl: f as unknown as typeof fetch,
+        sleep: noSleep,
+      }),
+    ).rejects.toThrow(/Too many redirects/);
+    expect(f).toHaveBeenCalledTimes(4);
+  });
+
+  it("aborts a streamed body over the byte cap (bytes, not chars)", async () => {
+    // Endless "éé" chunks: 2 chars but 4 bytes each; must stop at the cap.
+    let cancelled = false;
+    let pulls = 0;
+    const stream = new ReadableStream<Uint8Array>({
+      pull(c) {
+        pulls++;
+        c.enqueue(new TextEncoder().encode("éé"));
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+    // A Response-like object so we observe the underlying stream directly.
+    const f = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      body: stream,
+    }));
+    await expect(
+      fetchText(FEED, {
+        fetchImpl: f as unknown as typeof fetch,
+        maxBytes: 6,
+      }),
+    ).rejects.toThrow(/too large/);
+    expect(cancelled).toBe(true);
+    expect(pulls).toBeLessThan(5);
+    expect(f).toHaveBeenCalledTimes(1);
+  });
+
+  it("accepts a body exactly at the cap and rejects a large Content-Length", async () => {
+    const ok = vi.fn(async () => res(200, "éé"));
+    expect(
+      await fetchText(FEED, {
+        fetchImpl: ok as unknown as typeof fetch,
+        maxBytes: 4,
+      }),
+    ).toBe("éé");
+    const big = vi.fn(async () =>
+      res(200, "x", { "content-length": String(MAX_BYTES + 1) }),
+    );
+    await expect(
+      fetchText(FEED, { fetchImpl: big as unknown as typeof fetch }),
+    ).rejects.toThrow(/too large/);
+  });
+
+  it("retries network errors, 429 and 5xx with backoff and Retry-After", async () => {
     const f = vi
       .fn()
       .mockResolvedValueOnce(res(503))
       .mockResolvedValueOnce(res(429, "", { "retry-after": "30" }))
-      .mockRejectedValueOnce(new Error("ECONNRESET"))
+      .mockRejectedValueOnce(new TypeError("fetch failed"))
       .mockResolvedValueOnce(res(200, "ok"));
     const sleep = vi.fn(async () => {});
-    const body = await fetchText("u", {
+    const body = await fetchText(FEED, {
       fetchImpl: f,
       sleep,
       baseDelayMs: 1000,
@@ -148,17 +247,40 @@ describe("fetchText", () => {
       1000, 30000, 4000,
     ]);
   });
-  it("gives up after the retry budget", async () => {
-    const f = vi.fn(async () => res(404));
+
+  it.each([400, 403, 404, 410])("does not retry HTTP %i", async (status) => {
+    const f = vi.fn(async () => res(status));
     const sleep = vi.fn(async () => {});
     await expect(
-      fetchText("u", {
+      fetchText(FEED, { fetchImpl: f as unknown as typeof fetch, sleep }),
+    ).rejects.toThrow(`HTTP ${status}`);
+    expect(f).toHaveBeenCalledTimes(1);
+    expect(sleep).not.toHaveBeenCalled();
+  });
+
+  it("gives up after the retry budget on 5xx", async () => {
+    const f = vi.fn(async () => res(502));
+    await expect(
+      fetchText(FEED, {
         fetchImpl: f as unknown as typeof fetch,
-        sleep,
+        sleep: noSleep,
         retries: 2,
       }),
-    ).rejects.toThrow("HTTP 404");
+    ).rejects.toThrow("HTTP 502");
     expect(f).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe("parseRetryAfter", () => {
+  const now = Date.parse("2026-11-05T00:00:00Z");
+  it("parses seconds and HTTP-dates, capped at 60s", () => {
+    expect(parseRetryAfter("5", now)).toBe(5000);
+    expect(parseRetryAfter("3600", now)).toBe(60_000);
+    expect(parseRetryAfter("Thu, 05 Nov 2026 00:00:20 GMT", now)).toBe(20_000);
+    expect(parseRetryAfter("Thu, 05 Nov 2026 02:00:00 GMT", now)).toBe(60_000);
+    expect(parseRetryAfter("Wed, 04 Nov 2026 00:00:00 GMT", now)).toBe(0);
+    expect(parseRetryAfter("soon", now)).toBeUndefined();
+    expect(parseRetryAfter(null, now)).toBeUndefined();
   });
 });
 
@@ -193,7 +315,12 @@ function fakeDb(sources: ImportSource[]) {
         const e = events.find(
           (x) => x.sourceId === k.sourceId && x.externalId === k.externalId,
         );
-        return e ? { id: e.id as string } : null;
+        return e
+          ? {
+              id: e.id as string,
+              adminEditedAt: (e.adminEditedAt as Date | undefined) ?? null,
+            }
+          : null;
       },
       create: async ({ data }) =>
         events.push({ id: `e${events.length}`, ...data }),
@@ -262,6 +389,26 @@ describe("runImport", () => {
       status: "rejected",
       title: "Nairobi AI Builders Meetup",
     });
+  });
+
+  it("does not overwrite events an admin has edited", async () => {
+    const { db, events } = fakeDb([src({})]);
+    await runImport({ db, fetchText: fakeFetch, now: () => now });
+    Object.assign(events[0], {
+      title: "Admin title",
+      description: "Admin text",
+      adminEditedAt: now,
+      status: "approved",
+    });
+    const later = new Date(now.getTime() + MIN_INTERVAL_MS);
+    const r = await runImport({ db, fetchText: fakeFetch, now: () => later });
+    expect(r[0]).toMatchObject({ added: 0, updated: 1 });
+    expect(events[0]).toMatchObject({
+      title: "Admin title",
+      description: "Admin text",
+      status: "approved",
+    });
+    expect(events[1].title).toBe("Kenya Fintech Hackathon 2026");
   });
 
   it("skips sources fetched less than 6h ago", async () => {
