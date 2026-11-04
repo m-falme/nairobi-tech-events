@@ -23,8 +23,9 @@ npm run dev
 ```bash
 npm run lint
 npm run typecheck
+npm run format:check
 npm test
 npm run build
 ```
 
-See `SOURCES.md` (PR 0) for how event sources are accessed.
+See `SOURCES.md`, added in [PR #1](https://github.com/m-falme/nairobi-tech-events/pull/1), for how event sources are accessed.
