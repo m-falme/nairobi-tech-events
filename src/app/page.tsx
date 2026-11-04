@@ -8,6 +8,10 @@ import {
   type RawSearchParams,
 } from "@/lib/filters";
 import { formatEventDate } from "@/lib/format";
+import { safeHref } from "@/lib/url";
+
+const focus =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +55,7 @@ export default async function Home({
             type="search"
             defaultValue={filters.q ?? ""}
             maxLength={100}
-            className="mt-1 w-full rounded border px-2 py-1"
+            className={`mt-1 w-full rounded border px-2 py-1 ${focus}`}
           />
         </div>
         <fieldset className="sm:col-span-2">
@@ -60,6 +64,7 @@ export default async function Home({
             {EVENT_TYPES.map((t) => (
               <label key={t} className="flex items-center gap-1">
                 <input
+                  className={focus}
                   type="checkbox"
                   name="type"
                   value={t}
@@ -78,7 +83,7 @@ export default async function Home({
             id="format"
             name="format"
             defaultValue={filters.format ?? ""}
-            className="mt-1 w-full rounded border px-2 py-1"
+            className={`mt-1 w-full rounded border px-2 py-1 ${focus}`}
           >
             <option value="">Online and in person</option>
             <option value="online">Online</option>
@@ -93,7 +98,7 @@ export default async function Home({
             id="range"
             name="range"
             defaultValue={filters.range ?? ""}
-            className="mt-1 w-full rounded border px-2 py-1"
+            className={`mt-1 w-full rounded border px-2 py-1 ${focus}`}
           >
             <option value="">Any upcoming date</option>
             <option value="today">Today</option>
@@ -113,7 +118,7 @@ export default async function Home({
             name="from"
             type="date"
             defaultValue={filters.from ?? ""}
-            className="mt-1 w-full rounded border px-2 py-1"
+            className={`mt-1 w-full rounded border px-2 py-1 ${focus}`}
           />
         </div>
         <div>
@@ -125,18 +130,18 @@ export default async function Home({
             name="to"
             type="date"
             defaultValue={filters.to ?? ""}
-            className="mt-1 w-full rounded border px-2 py-1"
+            className={`mt-1 w-full rounded border px-2 py-1 ${focus}`}
           />
         </div>
         <div className="flex gap-3 sm:col-span-2">
           <button
             type="submit"
-            className="rounded bg-blue-700 px-4 py-1 text-white hover:bg-blue-800 focus:outline-2 focus:outline-offset-2"
+            className={`rounded bg-blue-700 px-4 py-1 text-white hover:bg-blue-800 ${focus}`}
           >
             Apply filters
           </button>
           {hasFilters && (
-            <Link href="/" className="self-center underline">
+            <Link href="/" className={`self-center underline ${focus}`}>
               Clear filters
             </Link>
           )}
@@ -162,9 +167,19 @@ export default async function Home({
             <li key={e.id} className="rounded border p-4">
               <article>
                 <h2 className="text-lg font-semibold">
-                  <a href={e.url} rel="noopener noreferrer" target="_blank">
-                    {e.title}
-                  </a>
+                  {safeHref(e.url) ? (
+                    <a
+                      href={safeHref(e.url)!}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                      className={`underline ${focus}`}
+                    >
+                      {e.title}
+                      <span className="sr-only"> (opens in new tab)</span>
+                    </a>
+                  ) : (
+                    e.title
+                  )}
                 </h2>
                 <p className="text-sm text-gray-700">
                   <time dateTime={e.startsAt.toISOString()}>
@@ -191,7 +206,7 @@ export default async function Home({
             <Link
               href={`/${toQueryString(filters, { page: page - 1 })}`}
               rel="prev"
-              className="underline"
+              className={`underline ${focus}`}
             >
               Previous
             </Link>
@@ -205,7 +220,7 @@ export default async function Home({
             <Link
               href={`/${toQueryString(filters, { page: page + 1 })}`}
               rel="next"
-              className="underline"
+              className={`underline ${focus}`}
             >
               Next
             </Link>
