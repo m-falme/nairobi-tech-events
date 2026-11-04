@@ -33,6 +33,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://ci:ci-only-password@localhost:5432/events_ci
       ADMIN_SEED_PASSWORD: ci-only-admin-password
+      AUTH_SECRET: ci-only-auth-secret-not-for-production
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -63,6 +64,7 @@ jobs:
           DATABASE_URL=postgresql://ci:ci-only-password@db:5432/events_ci
           ADMIN_SEED_EMAIL=admin@example.com
           ADMIN_SEED_PASSWORD=ci-only-admin-password
+          AUTH_SECRET=ci-only-auth-secret-not-for-production
           EOF
       - name: Build image
         run: docker compose build

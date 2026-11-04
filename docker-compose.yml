@@ -31,6 +31,8 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-events}:${POSTGRES_PASSWORD:-change-me}@db:5432/${POSTGRES_DB:-events}
       SITE_URL: ${SITE_URL:-http://localhost:3000}
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env}
+      AUTH_TRUST_HOST: "true"
     ports:
       - "3000:3000"
     depends_on:
