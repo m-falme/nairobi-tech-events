@@ -13,8 +13,21 @@ services:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       retries: 10
+  migrate:
+    build:
+      context: .
+      target: migrate
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-events}:${POSTGRES_PASSWORD:-change-me}@db:5432/${POSTGRES_DB:-events}
+      ADMIN_SEED_EMAIL: ${ADMIN_SEED_EMAIL:-admin@example.com}
+      ADMIN_SEED_PASSWORD: ${ADMIN_SEED_PASSWORD:?set ADMIN_SEED_PASSWORD in .env}
+    depends_on:
+      db:
+        condition: service_healthy
   app:
-    build: .
+    build:
+      context: .
+      target: runner
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-events}:${POSTGRES_PASSWORD:-change-me}@db:5432/${POSTGRES_DB:-events}
     ports:
@@ -22,5 +35,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 volumes:
   pgdata:

@@ -9,7 +9,15 @@ cp .env.example .env   # edit values
 docker compose up --build
 ```
 
-Open http://localhost:3000.
+The `migrate` service runs `prisma migrate deploy` and the seed (2 sources, 10 sample events, 1 admin hashed from `ADMIN_SEED_PASSWORD`) before the app starts. Open http://localhost:3000.
+
+## Database scripts
+
+```bash
+npm run db:migrate   # create/apply migrations in dev
+npm run db:deploy    # apply migrations (prod/CI)
+npm run db:seed      # seed sample data (needs ADMIN_SEED_PASSWORD)
+```
 
 ## Run locally without Docker
 
