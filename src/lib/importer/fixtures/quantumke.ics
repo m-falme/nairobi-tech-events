@@ -1,0 +1,14 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Luma//Calendar//EN
+X-WR-CALNAME:QuantumKE
+BEGIN:VEVENT
+UID:evt-Qk1@events.lu.ma
+DTSTAMP:20261104T090000Z
+DTSTART:20261125T060000Z
+DTEND:20261125T120000Z
+SUMMARY:Intro to Quantum Computing Workshop
+DESCRIPTION:Get up-to-date information at: https://luma.com/qk-intro\n\nHands-on Qiskit session.
+LOCATION:Strathmore University\, Nairobi
+END:VEVENT
+END:VCALENDAR

@@ -18,10 +18,20 @@ async function main() {
 
   const ids: Record<string, string> = {};
   for (const { key, ...s } of seedSources) {
-    const existing = await prisma.source.findFirst({ where: { name: s.name } });
-    const row = existing
-      ? await prisma.source.update({ where: { id: existing.id }, data: s })
-      : await prisma.source.create({ data: s });
+    // Upsert by the unique source key; adopt a pre-key row with the same name.
+    const legacy = await prisma.source.findFirst({
+      where: { key: null, name: s.name },
+    });
+    const row = legacy
+      ? await prisma.source.update({
+          where: { id: legacy.id },
+          data: { ...s, key },
+        })
+      : await prisma.source.upsert({
+          where: { key },
+          update: s,
+          create: { ...s, key },
+        });
     ids[key] = row.id;
   }
 
@@ -32,10 +42,27 @@ async function main() {
       startsAt: new Date(e.startsAt),
       endsAt: e.endsAt ? new Date(e.endsAt) : null,
     };
-    const existing = await prisma.event.findFirst({ where: { url: e.url } });
-    if (existing)
-      await prisma.event.update({ where: { id: existing.id }, data });
-    else await prisma.event.create({ data });
+    if (data.sourceId && data.externalId) {
+      // Imported-style rows: upsert on the (sourceId, externalId) unique key.
+      await prisma.event.upsert({
+        where: {
+          sourceId_externalId: {
+            sourceId: data.sourceId,
+            externalId: data.externalId,
+          },
+        },
+        update: data,
+        create: data,
+      });
+    } else {
+      // NULL externalId never matches a unique index, so dedupe by URL.
+      const existing = await prisma.event.findFirst({
+        where: { url: e.url, externalId: null },
+      });
+      if (existing)
+        await prisma.event.update({ where: { id: existing.id }, data });
+      else await prisma.event.create({ data });
+    }
   }
 
   console.log(

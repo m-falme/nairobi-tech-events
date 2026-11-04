@@ -1,3 +1,4 @@
+import { lumaIcsUrl } from "../src/lib/importer/allowlist";
 import type { EventStatus, EventType, SourceKind } from "@prisma/client";
 
 export type SeedSource = {
@@ -40,6 +41,26 @@ export const seedSources: SeedSource[] = [
     url: null,
     trusted: false,
     termsNote: "Events entered by hand or via the public submission form.",
+  },
+  // Approved Luma calendars (SOURCES.md, overrides for PR 8). Untrusted, so
+  // imported events land in the review queue as pending.
+  {
+    key: "luma:cal-tNFqmDwu6YpmOOJ",
+    name: "Tech Kenya Events Calendar (Luma)",
+    kind: "ical",
+    url: lumaIcsUrl("cal-tNFqmDwu6YpmOOJ"),
+    trusted: false,
+    termsNote:
+      "Luma iCal, approved by Mark 2026-11-05. Text only, no images, link back, poll at most every 6h.",
+  },
+  {
+    key: "luma:cal-Cpt1V9LBIY4ETmr",
+    name: "QuantumKE (Luma)",
+    kind: "ical",
+    url: lumaIcsUrl("cal-Cpt1V9LBIY4ETmr"),
+    trusted: false,
+    termsNote:
+      "Luma iCal, approved by Mark 2026-11-05. Text only, no images, link back, poll at most every 6h.",
   },
 ];
 

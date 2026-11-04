@@ -89,10 +89,7 @@ export default async function ReviewQueue({
                 </p>
                 <p className="text-sm break-all text-gray-700">{e.url}</p>
                 {dups.length > 0 && (
-                  <div
-                    role="alert"
-                    className="mt-2 rounded border border-amber-500 bg-amber-50 p-2 text-sm"
-                  >
+                  <div className="mt-2 rounded border border-amber-500 bg-amber-50 p-2 text-sm">
                     <p className="font-medium">Possible duplicate of:</p>
                     <ul className="list-disc pl-5">
                       {dups.map((d) => (

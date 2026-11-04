@@ -46,37 +46,61 @@ export function hashIp(ip: string, salt: string): string {
   return createHash("sha256").update(`${salt}:${ip}`).digest("hex");
 }
 
+type AttemptTable = {
+  count(args: {
+    where: { ipHash: string; createdAt: { gte: Date } };
+  }): Promise<number>;
+  create(args: { data: { ipHash: string; createdAt: Date } }): Promise<unknown>;
+  deleteMany(args: { where: { createdAt: { lt: Date } } }): Promise<unknown>;
+};
+
+/** Transaction client surface used by the rate limiter. */
+export type RateLimitTx = {
+  $executeRaw(
+    query: TemplateStringsArray,
+    ...values: unknown[]
+  ): Promise<number>;
+  submissionAttempt: AttemptTable;
+};
+
 export type SubmissionDb = {
-  submissionAttempt: {
-    count(args: {
-      where: { ipHash: string; createdAt: { gte: Date } };
-    }): Promise<number>;
-    create(args: {
-      data: { ipHash: string; createdAt: Date };
-    }): Promise<unknown>;
-    deleteMany(args: { where: { createdAt: { lt: Date } } }): Promise<unknown>;
-  };
+  $transaction<R>(fn: (tx: RateLimitTx) => Promise<R>): Promise<R>;
   event: {
     create(args: { data: Record<string, unknown> }): Promise<unknown>;
   };
 };
 
-/** DB-backed sliding window: allow RATE_LIMIT attempts per RATE_WINDOW_MS. */
+/**
+ * DB-backed sliding window: allow RATE_LIMIT attempts per RATE_WINDOW_MS.
+ * Count-then-insert runs in one transaction holding a per-IP advisory lock,
+ * so concurrent requests (even across instances) cannot both pass at 4/5.
+ */
 export async function checkRateLimit(
   db: SubmissionDb,
   ipHash: string,
   now: Date,
 ): Promise<boolean> {
   const since = new Date(now.getTime() - RATE_WINDOW_MS);
-  await db.submissionAttempt.deleteMany({
-    where: { createdAt: { lt: since } },
+  return db.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${ipHash}, 0))`;
+    await tx.submissionAttempt.deleteMany({
+      where: { createdAt: { lt: since } },
+    });
+    const used = await tx.submissionAttempt.count({
+      where: { ipHash, createdAt: { gte: since } },
+    });
+    if (used >= RATE_LIMIT) return false;
+    await tx.submissionAttempt.create({ data: { ipHash, createdAt: now } });
+    return true;
   });
-  const used = await db.submissionAttempt.count({
-    where: { ipHash, createdAt: { gte: since } },
-  });
-  if (used >= RATE_LIMIT) return false;
-  await db.submissionAttempt.create({ data: { ipHash, createdAt: now } });
-  return true;
+}
+
+/** Salt for IP hashes. Fails fast rather than hashing with an empty salt. */
+export function ipSalt(env: Record<string, string | undefined> = process.env) {
+  const salt = env.AUTH_SECRET?.trim();
+  if (!salt)
+    throw new Error("AUTH_SECRET must be set (used to salt IP hashes)");
+  return salt;
 }
 
 export type SubmitDeps = { db: SubmissionDb; ipHash: string; now: Date };
