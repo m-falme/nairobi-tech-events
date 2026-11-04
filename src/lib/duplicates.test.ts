@@ -4,6 +4,7 @@ import {
   findDuplicates,
   normaliseUrl,
   titleSimilarity,
+  urlHost,
 } from "./duplicates";
 
 const ev = (id: string, title: string, url: string, startsAt: string) => ({
@@ -100,5 +101,29 @@ describe("findDuplicates", () => {
   });
   it("never flags the event itself", () => {
     expect(findDuplicates(target, [target])).toEqual([]);
+  });
+});
+
+describe("same-URL across dates (queue scenario)", () => {
+  it("flags an approved 2029 event with www + trailing slash", () => {
+    const pending = ev(
+      "p",
+      "Var Meetup",
+      "https://var.ke/e",
+      "2026-11-10T15:00:00Z",
+    );
+    const approved = ev(
+      "x",
+      "Something else",
+      "https://www.var.ke/e/",
+      "2029-03-01T10:00:00Z",
+    );
+    expect(findDuplicates(pending, [approved])).toEqual([
+      { id: "x", title: "Something else", reason: "same-url" },
+    ]);
+  });
+  it("urlHost strips www and lowercases for the candidate query", () => {
+    expect(urlHost("https://WWW.Var.ke/e/")).toBe("var.ke");
+    expect(urlHost("notaurl")).toBeNull();
   });
 });

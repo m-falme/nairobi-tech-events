@@ -58,6 +58,7 @@ describe("editSchema", () => {
   it.each([
     ["javascript URL", { url: "javascript:alert(1)" }],
     ["data URL", { url: "data:text/html,x" }],
+    ["not a URL", { url: "notaurl" }],
     ["empty title", { title: "  " }],
     ["bad type", { type: "party" }],
     ["bad start", { startsAt: "tomorrow" }],
@@ -65,6 +66,14 @@ describe("editSchema", () => {
     ["bad id", { id: "x" }],
   ])("rejects %s", (_n, patch) => {
     expect(editSchema.safeParse({ ...valid, ...patch }).success).toBe(false);
+  });
+});
+
+describe("httpUrl does not throw", () => {
+  it("returns a validation error for 'notaurl' instead of throwing", () => {
+    const r = editSchema.safeParse({ ...valid, url: "notaurl" });
+    expect(r.success).toBe(false);
+    expect(r.error?.flatten().fieldErrors.url?.length).toBeGreaterThan(0);
   });
 });
 

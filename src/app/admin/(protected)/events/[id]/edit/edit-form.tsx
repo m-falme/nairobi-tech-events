@@ -58,6 +58,11 @@ export function EditForm({ event }: { event: Values }) {
       : {};
   return (
     <form action={action} className="mt-4 grid gap-3">
+      {state.error && (
+        <p role="alert" className="text-red-700">
+          {state.error}
+        </p>
+      )}
       <input type="hidden" name="id" value={event.id} />
       <Field name="title" label="Title" errors={err.title}>
         <input

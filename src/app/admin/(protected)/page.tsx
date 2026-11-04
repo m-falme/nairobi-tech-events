@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { findDuplicates } from "@/lib/duplicates";
+import { findDuplicates, urlHost } from "@/lib/duplicates";
 import { formatEventDate } from "@/lib/format";
 import { focus } from "@/lib/ui";
 import { approveEvent, rejectEvent } from "./actions";
@@ -14,12 +14,19 @@ export default async function ReviewQueue() {
     take: 100,
     include: { source: { select: { name: true } } },
   });
+  // Same-URL candidates: any non-rejected event on the same host, any date.
+  // Title candidates: non-rejected events near the pending dates.
+  const hosts = [
+    ...new Set(pending.map((p) => urlHost(p.url)).filter(Boolean)),
+  ] as string[];
   const others = pending.length
     ? await prisma.event.findMany({
         where: {
           status: { not: "rejected" },
           OR: [
-            { url: { in: pending.map((p) => p.url) } },
+            ...hosts.map((h) => ({
+              url: { contains: h, mode: "insensitive" as const },
+            })),
             {
               startsAt: {
                 gte: new Date(pending[0].startsAt.getTime() - DAY),
@@ -33,10 +40,16 @@ export default async function ReviewQueue() {
         select: { id: true, title: true, url: true, startsAt: true },
       })
     : [];
+  const total = await prisma.event.count({ where: { status: "pending" } });
 
   return (
     <main className="mt-6">
-      <h1 className="text-2xl font-bold">Pending events ({pending.length})</h1>
+      <h1 className="text-2xl font-bold">Pending events ({total})</h1>
+      {total > pending.length && (
+        <p className="mt-1 text-sm text-gray-700">
+          Showing {pending.length} of {total} (soonest first).
+        </p>
+      )}
       {pending.length === 0 ? (
         <p className="mt-4 rounded border border-dashed p-6 text-center">
           Nothing to review.

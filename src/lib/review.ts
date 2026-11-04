@@ -11,9 +11,14 @@ export const idSchema = z.object({ id: z.string().uuid() });
 const httpUrl = z
   .string()
   .trim()
-  .url()
   .max(2000)
-  .refine((u) => /^https?:$/.test(new URL(u).protocol), "Must be http(s)");
+  .refine((u) => {
+    try {
+      return /^https?:$/.test(new URL(u).protocol);
+    } catch {
+      return false;
+    }
+  }, "Must be a valid http(s) URL");
 
 const optionalText = (max: number) =>
   z
