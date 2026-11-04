@@ -1,0 +1,37 @@
+name: Import events (disabled until launch approval)
+
+# Runs `npm run import` against the production DB (DATABASE_URL secret).
+# DISABLED: Mark has not given launch approval. To enable after approval:
+#   1. uncomment the schedule below (every 6h, the minimum allowed interval),
+#   2. remove `if: false` from the job,
+#   3. add the DATABASE_URL secret (and optionally IMPORT_USER_AGENT var).
+on:
+  # schedule:
+  #   - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: import
+  cancel-in-progress: false
+
+jobs:
+  import:
+    # Guard: never runs (scheduled or manual) until launch approval.
+    if: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      IMPORT_USER_AGENT: ${{ vars.IMPORT_USER_AGENT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma migrate deploy
+      - run: npm run import

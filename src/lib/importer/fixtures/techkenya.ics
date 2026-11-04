@@ -1,0 +1,44 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Luma//Calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Tech Kenya Events Calendar
+X-WR-TIMEZONE:Africa/Nairobi
+BEGIN:VEVENT
+UID:evt-AbC123@events.lu.ma
+DTSTAMP:20261104T090000Z
+DTSTART:20261120T150000Z
+DTEND:20261120T180000Z
+SUMMARY:Nairobi AI Builders Meetup
+DESCRIPTION:Get up-to-date information at: https://luma.com/ai-builders-nbo\n\n<p>Talks on <b>LLM agents</b> &amp; demos.</p><img src="https://images.lumacdn.com/cover.png">\n![banner](https://images.lumacdn.com/banner.jpg)
+LOCATION:iHub\, Senteu Plaza\, Nairobi
+ORGANIZER;CN=Tech Kenya:mailto:hello@example.com
+URL:https://luma.com/ai-builders-nbo
+ATTACH;FMTTYPE=image/png:https://images.lumacdn.com/cover.png
+END:VEVENT
+BEGIN:VEVENT
+UID:evt-DeF456@events.lu.ma
+DTSTAMP:20261104T090000Z
+DTSTART;TZID=Africa/Nairobi:20261205T090000
+DTEND;TZID=Africa/Nairobi:20261206T170000
+SUMMARY:Kenya Fintech Hackathon 2026
+DESCRIPTION:Get up-to-date information at: https://lu.ma/kfh2026\n\nBuild payments tools over 2 days.
+LOCATION:https://zoom.us/j/123456789
+END:VEVENT
+BEGIN:VEVENT
+UID:evt-NoLink@events.lu.ma
+DTSTAMP:20261104T090000Z
+DTSTART:20261210T150000Z
+SUMMARY:Event without any link
+DESCRIPTION:No official page here.
+END:VEVENT
+BEGIN:VEVENT
+UID:evt-Cancelled@events.lu.ma
+DTSTAMP:20261104T090000Z
+DTSTART:20261211T150000Z
+SUMMARY:Cancelled Workshop
+STATUS:CANCELLED
+URL:https://luma.com/cancelled
+END:VEVENT
+END:VCALENDAR

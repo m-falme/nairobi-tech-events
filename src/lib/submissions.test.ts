@@ -3,9 +3,11 @@ import {
   checkRateLimit,
   clientIp,
   hashIp,
+  ipSalt,
   RATE_WINDOW_MS,
   submissionSchema,
   submitCore,
+  type RateLimitTx,
   type SubmissionDb,
 } from "./submissions";
 
@@ -13,7 +15,12 @@ import {
 function fakeDb() {
   const attempts: { ipHash: string; createdAt: Date }[] = [];
   const events: Record<string, unknown>[] = [];
-  const db: SubmissionDb = {
+  const locks: string[] = [];
+  const tx: RateLimitTx = {
+    $executeRaw: async (_q, ...v) => {
+      locks.push(String(v[0]));
+      return 1;
+    },
     submissionAttempt: {
       count: async ({ where }) =>
         attempts.filter(
@@ -26,9 +33,12 @@ function fakeDb() {
           if (attempts[i].createdAt < where.createdAt.lt) attempts.splice(i, 1);
       },
     },
+  };
+  const db: SubmissionDb = {
+    $transaction: async (fn) => fn(tx),
     event: { create: vi.fn(async ({ data }) => events.push(data)) },
   };
-  return { db, attempts, events };
+  return { db, attempts, events, locks };
 }
 
 const valid = {
@@ -102,7 +112,21 @@ describe("clientIp / hashIp", () => {
   });
 });
 
+describe("ipSalt", () => {
+  it("fails fast without AUTH_SECRET", () => {
+    expect(() => ipSalt({})).toThrow(/AUTH_SECRET/);
+    expect(() => ipSalt({ AUTH_SECRET: "  " })).toThrow(/AUTH_SECRET/);
+    expect(ipSalt({ AUTH_SECRET: "s" })).toBe("s");
+  });
+});
+
 describe("checkRateLimit", () => {
+  it("takes a per-IP advisory lock inside the transaction", async () => {
+    const { db, locks } = fakeDb();
+    await checkRateLimit(db, "iphash", now);
+    expect(locks).toEqual(["iphash"]);
+  });
+
   it("allows 5, blocks the 6th, and resets after the window", async () => {
     const { db } = fakeDb();
     for (let i = 0; i < 5; i++)

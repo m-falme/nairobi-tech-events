@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { seedEvents, seedSources } from "./seed-data";
 
 describe("seed data", () => {
-  it("has 2 sources and 10 events", () => {
-    expect(seedSources).toHaveLength(2);
+  it("has 4 sources and 10 events", () => {
+    expect(seedSources).toHaveLength(4);
     expect(seedEvents).toHaveLength(10);
   });
 
@@ -31,5 +31,16 @@ describe("seed data", () => {
       .filter((e) => e.externalId)
       .map((e) => `${e.sourceKey}:${e.externalId}`);
     expect(new Set(pairs).size).toBe(pairs.length);
+  });
+
+  it("has unique source keys and only allowlisted Luma feeds", async () => {
+    const { isImportAllowed } = await import("../src/lib/importer/allowlist");
+    expect(new Set(seedSources.map((s) => s.key)).size).toBe(
+      seedSources.length,
+    );
+    const luma = seedSources.filter((s) => s.key.startsWith("luma:"));
+    expect(luma).toHaveLength(2);
+    for (const s of luma)
+      expect(isImportAllowed({ ...s, active: true })).toBe(true);
   });
 });

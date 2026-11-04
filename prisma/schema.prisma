@@ -14,6 +14,13 @@ enum SourceKind {
   manual
 }
 
+enum ImportRunStatus {
+  running
+  success
+  failed
+  skipped
+}
+
 enum EventType {
   hackathon
   meetup
@@ -30,6 +37,8 @@ enum EventStatus {
 
 model Source {
   id            String      @id @default(uuid()) @db.Uuid
+  /// Stable key for seeding/upserts, e.g. "luma:cal-xxx". Null for ad-hoc sources.
+  key           String?     @unique
   name          String
   kind          SourceKind
   url           String?
@@ -64,6 +73,8 @@ model Event {
   createdAt        DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
 
+  // Postgres treats NULLs as distinct (NULLS DISTINCT is the default), so
+  // submissions/manual events with NULL source_id or external_id never collide.
   @@unique([sourceId, externalId])
   @@index([status, startsAt])
   @@map("events")
@@ -78,15 +89,18 @@ model Admin {
 }
 
 model ImportRun {
-  id         String    @id @default(uuid()) @db.Uuid
-  sourceId   String    @map("source_id") @db.Uuid
-  source     Source    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
-  startedAt  DateTime  @default(now()) @map("started_at") @db.Timestamptz(6)
-  finishedAt DateTime? @map("finished_at") @db.Timestamptz(6)
-  added      Int       @default(0)
-  updated    Int       @default(0)
+  id         String          @id @default(uuid()) @db.Uuid
+  sourceId   String          @map("source_id") @db.Uuid
+  source     Source          @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  startedAt  DateTime        @default(now()) @map("started_at") @db.Timestamptz(6)
+  finishedAt DateTime?       @map("finished_at") @db.Timestamptz(6)
+  status     ImportRunStatus @default(running)
+  added      Int             @default(0)
+  updated    Int             @default(0)
+  skipped    Int             @default(0)
   error      String?
 
+  @@index([sourceId, startedAt])
   @@map("import_runs")
 }
 
