@@ -9,6 +9,10 @@ cp .env.example .env   # edit values
 docker compose up --build
 ```
 
+Before starting, set `AUTH_SECRET` in `.env` (generate one: `openssl rand -base64 32`). `AUTH_TRUST_HOST=true` is needed when self-hosting (Docker, `next start`) so Auth.js trusts the Host header; Compose sets it for the app.
+
+The admin signs in at http://localhost:3000/admin/login with `ADMIN_SEED_EMAIL` / `ADMIN_SEED_PASSWORD`.
+
 The `migrate` service runs `prisma migrate deploy` and the seed (2 sources, 10 sample events, 1 admin hashed from `ADMIN_SEED_PASSWORD`) before the app starts. Open http://localhost:3000.
 
 ## Database scripts
