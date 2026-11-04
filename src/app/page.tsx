@@ -17,11 +17,15 @@ export default async function Home({
   searchParams: Promise<RawSearchParams>;
 }) {
   const filters = parseFilters(await searchParams);
-  const { events, count } = await listEvents(filters);
+  const { events, count, page } = await listEvents(filters);
   const pages = totalPages(count);
-  const page = Math.min(filters.page, pages);
   const hasFilters = Boolean(
-    filters.q || filters.type || filters.format || filters.from || filters.to,
+    filters.q ||
+    filters.type?.length ||
+    filters.format ||
+    filters.range ||
+    filters.from ||
+    filters.to,
   );
 
   return (
@@ -50,24 +54,22 @@ export default async function Home({
             className="mt-1 w-full rounded border px-2 py-1"
           />
         </div>
-        <div>
-          <label htmlFor="type" className="block text-sm font-medium">
-            Type
-          </label>
-          <select
-            id="type"
-            name="type"
-            defaultValue={filters.type ?? ""}
-            className="mt-1 w-full rounded border px-2 py-1"
-          >
-            <option value="">All types</option>
+        <fieldset className="sm:col-span-2">
+          <legend className="text-sm font-medium">Type</legend>
+          <div className="mt-1 flex flex-wrap gap-4">
             {EVENT_TYPES.map((t) => (
-              <option key={t} value={t}>
+              <label key={t} className="flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  name="type"
+                  value={t}
+                  defaultChecked={filters.type?.includes(t) ?? false}
+                />
                 {t[0].toUpperCase() + t.slice(1)}
-              </option>
+              </label>
             ))}
-          </select>
-        </div>
+          </div>
+        </fieldset>
         <div>
           <label htmlFor="format" className="block text-sm font-medium">
             Format
@@ -83,6 +85,25 @@ export default async function Home({
             <option value="in-person">In person</option>
           </select>
         </div>
+        <div>
+          <label htmlFor="range" className="block text-sm font-medium">
+            Date
+          </label>
+          <select
+            id="range"
+            name="range"
+            defaultValue={filters.range ?? ""}
+            className="mt-1 w-full rounded border px-2 py-1"
+          >
+            <option value="">Any upcoming date</option>
+            <option value="today">Today</option>
+            <option value="week">This week</option>
+            <option value="month">This month</option>
+          </select>
+        </div>
+        <p className="text-sm text-gray-700 sm:col-span-2">
+          Custom range (dates in EAT; combines with the Date preset):
+        </p>
         <div>
           <label htmlFor="from" className="block text-sm font-medium">
             From
@@ -154,9 +175,10 @@ export default async function Home({
                   {" · "}
                   <span className="capitalize">{e.type}</span>
                 </p>
-                {e.organiser && (
-                  <p className="text-sm text-gray-700">By {e.organiser}</p>
-                )}
+                <p className="text-sm text-gray-700">
+                  {e.source ? `via ${e.source.name}` : "Submitted"}
+                  {e.organiser && <> · By {e.organiser}</>}
+                </p>
               </article>
             </li>
           ))}

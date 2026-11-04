@@ -1,13 +1,15 @@
 import { prisma } from "./db";
-import { buildWhere, PAGE_SIZE, type EventFilters } from "./filters";
+import { buildWhere, clampPage, PAGE_SIZE, type EventFilters } from "./filters";
 
 export async function listEvents(f: EventFilters, now: Date = new Date()) {
   const where = buildWhere(f, now);
-  const [events, count] = await prisma.$transaction([
+  const count = await prisma.event.count({ where });
+  const page = clampPage(f.page, count);
+  const [events] = await prisma.$transaction([
     prisma.event.findMany({
       where,
       orderBy: [{ startsAt: "asc" }, { id: "asc" }],
-      skip: (f.page - 1) * PAGE_SIZE,
+      skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
       select: {
         id: true,
@@ -19,11 +21,11 @@ export async function listEvents(f: EventFilters, now: Date = new Date()) {
         type: true,
         url: true,
         organiser: true,
+        source: { select: { name: true } },
       },
     }),
-    prisma.event.count({ where }),
   ]);
-  return { events, count };
+  return { events, count, page };
 }
 
 export type ListedEvent = Awaited<

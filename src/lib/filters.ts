@@ -16,10 +16,13 @@ const dateString = z
   .regex(/^\d{4}-\d{2}-\d{2}$/)
   .refine((s) => !Number.isNaN(Date.parse(`${s}T00:00:00+03:00`)));
 
+export const RANGE_PRESETS = ["today", "week", "month"] as const;
+
 const schema = z.object({
   q: z.string().trim().max(100).optional().catch(undefined),
-  type: z.enum(EVENT_TYPES).optional().catch(undefined),
+  type: z.array(z.enum(EVENT_TYPES)).optional().catch(undefined),
   format: z.enum(FORMATS).optional().catch(undefined),
+  range: z.enum(RANGE_PRESETS).optional().catch(undefined),
   from: dateString.optional().catch(undefined),
   to: dateString.optional().catch(undefined),
   page: z.coerce.number().int().min(1).max(1000).catch(1).default(1),
@@ -30,8 +33,17 @@ export type RawSearchParams = Record<string, string | string[] | undefined>;
 
 /** Parse URL search params; invalid values are dropped rather than erroring. */
 export function parseFilters(params: RawSearchParams): EventFilters {
-  const flat: Record<string, string | undefined> = {};
+  const flat: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(params)) {
+    if (k === "type") {
+      const list = (Array.isArray(v) ? v : v ? [v] : [])
+        .flatMap((x) => x.split(","))
+        .filter((x): x is (typeof EVENT_TYPES)[number] =>
+          (EVENT_TYPES as readonly string[]).includes(x),
+        );
+      flat.type = list.length ? [...new Set(list)] : undefined;
+      continue;
+    }
     const value = Array.isArray(v) ? v[0] : v;
     flat[k] = value === "" ? undefined : value;
   }
@@ -40,34 +52,94 @@ export function parseFilters(params: RawSearchParams): EventFilters {
   return parsed;
 }
 
+const EAT_OFFSET_MS = 3 * 60 * 60 * 1000;
+
 /** Start of a calendar day in Nairobi (UTC+3, no DST). */
 export function nairobiDayStart(date: string): Date {
   return new Date(`${date}T00:00:00+03:00`);
+}
+
+/** Date range [start, end) in EAT: preset and custom from/to intersect. */
+export function dateRange(
+  f: EventFilters,
+  now: Date,
+): { start?: Date; end?: Date } {
+  const eat = new Date(now.getTime() + EAT_OFFSET_MS);
+  const y = eat.getUTCFullYear();
+  const m = eat.getUTCMonth();
+  const d = eat.getUTCDate();
+  const day = (yy: number, mm: number, dd: number) =>
+    new Date(Date.UTC(yy, mm, dd) - EAT_OFFSET_MS);
+  let start: Date | undefined;
+  let end: Date | undefined;
+  if (f.range === "today") {
+    start = day(y, m, d);
+    end = day(y, m, d + 1);
+  } else if (f.range === "week") {
+    const sinceMonday = (eat.getUTCDay() + 6) % 7;
+    start = day(y, m, d - sinceMonday);
+    end = day(y, m, d - sinceMonday + 7);
+  } else if (f.range === "month") {
+    start = day(y, m, 1);
+    end = day(y, m + 1, 1);
+  }
+  if (f.from) {
+    const s = nairobiDayStart(f.from);
+    if (!start || s > start) start = s;
+  }
+  if (f.to) {
+    const e = nairobiDayStart(f.to);
+    e.setUTCDate(e.getUTCDate() + 1);
+    if (!end || e < end) end = e;
+  }
+  return { start, end };
+}
+
+/** Escape LIKE wildcards so user search text matches literally. */
+export function escapeLike(q: string): string {
+  return q.replace(/[\\%_]/g, (c) => `\\${c}`);
+}
+
+/** Clamp a requested page into 1..totalPages(count). */
+export function clampPage(page: number, count: number): number {
+  return Math.min(Math.max(1, page), totalPages(count));
 }
 
 export function buildWhere(
   f: EventFilters,
   now: Date = new Date(),
 ): Prisma.EventWhereInput {
-  const fromDate = f.from ? nairobiDayStart(f.from) : undefined;
-  const lower = fromDate && fromDate > now ? fromDate : now;
-  const startsAt: Prisma.DateTimeFilter = { gte: lower };
-  if (f.to) {
-    const end = nairobiDayStart(f.to);
-    end.setUTCDate(end.getUTCDate() + 1);
-    startsAt.lt = end;
+  const and: Prisma.EventWhereInput[] = [
+    // Not yet ended: end >= now, or start >= now when there is no end.
+    {
+      OR: [{ endsAt: { gte: now } }, { endsAt: null, startsAt: { gte: now } }],
+    },
+  ];
+  const { start, end } = dateRange(f, now);
+  // An event is in the range if it overlaps it.
+  if (end) and.push({ startsAt: { lt: end } });
+  if (start) {
+    and.push({
+      OR: [
+        { endsAt: { gte: start } },
+        { endsAt: null, startsAt: { gte: start } },
+      ],
+    });
   }
-  const where: Prisma.EventWhereInput = { status: "approved", startsAt };
-  if (f.type) where.type = f.type;
-  if (f.format) where.isOnline = f.format === "online";
   if (f.q) {
-    where.OR = [
-      { title: { contains: f.q, mode: "insensitive" } },
-      { description: { contains: f.q, mode: "insensitive" } },
-      { venue: { contains: f.q, mode: "insensitive" } },
-      { organiser: { contains: f.q, mode: "insensitive" } },
-    ];
+    const q = escapeLike(f.q);
+    and.push({
+      OR: [
+        { title: { contains: q, mode: "insensitive" } },
+        { description: { contains: q, mode: "insensitive" } },
+        { venue: { contains: q, mode: "insensitive" } },
+        { organiser: { contains: q, mode: "insensitive" } },
+      ],
+    });
   }
+  const where: Prisma.EventWhereInput = { status: "approved", AND: and };
+  if (f.type?.length) where.type = { in: f.type };
+  if (f.format) where.isOnline = f.format === "online";
   return where;
 }
 
@@ -78,7 +150,9 @@ export function toQueryString(
 ): string {
   const merged = { ...f, ...overrides };
   const sp = new URLSearchParams();
-  for (const key of ["q", "type", "format", "from", "to"] as const) {
+  if (merged.q) sp.set("q", merged.q);
+  for (const t of merged.type ?? []) sp.append("type", t);
+  for (const key of ["format", "range", "from", "to"] as const) {
     const v = merged[key];
     if (v) sp.set(key, v);
   }
