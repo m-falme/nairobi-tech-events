@@ -3,7 +3,10 @@ import { EVENT_TYPES } from "./filters";
 
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(200),
-  password: z.string().min(1).max(200),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .max(200, "Password is too long"),
 });
 
 export const idSchema = z.object({ id: z.string().uuid() });
@@ -39,7 +42,11 @@ export const eatDateTime = z
 export const editSchema = z
   .object({
     id: z.string().uuid(),
-    title: z.string().trim().min(1).max(200),
+    title: z
+      .string()
+      .trim()
+      .min(1, "Title is required")
+      .max(200, "Title must be 200 characters or fewer"),
     description: z.string().trim().max(10000).default(""),
     startsAt: eatDateTime,
     endsAt: z
