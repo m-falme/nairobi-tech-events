@@ -43,6 +43,9 @@ export default async function ReviewQueue({
         select: { id: true, title: true, url: true, startsAt: true },
       })
     : [];
+  const dupCount = pending.filter(
+    (p) => findDuplicates(p, others).length > 0,
+  ).length;
   const total = await prisma.event.count({ where: { status: "pending" } });
 
   return (
@@ -59,6 +62,12 @@ export default async function ReviewQueue({
       {total > pending.length && (
         <p className="mt-1 text-sm text-muted-foreground">
           Showing {pending.length} of {total} (soonest first).
+        </p>
+      )}
+      {dupCount > 0 && (
+        <p role="alert" className={`mt-3 ${alertWarn}`}>
+          {dupCount} pending {dupCount === 1 ? "event has" : "events have"} a
+          possible duplicate. Check the warnings below before approving.
         </p>
       )}
       {pending.length === 0 ? (
@@ -93,7 +102,7 @@ export default async function ReviewQueue({
                   {e.url}
                 </p>
                 {dups.length > 0 && (
-                  <div role="alert" className={`mt-3 ${alertWarn}`}>
+                  <div className={`mt-3 ${alertWarn}`}>
                     <p className="font-semibold">⚠ Possible duplicate of:</p>
                     <ul className="list-disc pl-5">
                       {dups.map((d) => (

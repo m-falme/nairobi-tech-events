@@ -169,3 +169,14 @@ export function toQueryString(
 export function totalPages(count: number): number {
   return Math.max(1, Math.ceil(count / PAGE_SIZE));
 }
+
+/** Parse a list query string (e.g. a detail page's ?back=) keeping repeated keys as arrays. */
+export function parseQueryString(qs: string): EventFilters {
+  const sp = new URLSearchParams(qs);
+  const raw: RawSearchParams = {};
+  for (const k of new Set(sp.keys())) {
+    const all = sp.getAll(k);
+    raw[k] = all.length > 1 ? all : all[0];
+  }
+  return parseFilters(raw);
+}

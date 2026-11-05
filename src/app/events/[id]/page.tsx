@@ -11,9 +11,9 @@ import {
   type DetailEvent,
 } from "@/lib/event-detail";
 import { eventPhase, PHASE_LABEL } from "@/lib/event-phase";
-import { formatCardDate } from "@/lib/format";
+import { formatCardDate, formatEndDate } from "@/lib/format";
 import { typeBadgeClass, typeLabel } from "@/lib/event-type";
-import { parseFilters, toQueryString } from "@/lib/filters";
+import { parseQueryString, toQueryString } from "@/lib/filters";
 import { safeHref } from "@/lib/url";
 
 export const dynamic = "force-dynamic";
@@ -44,11 +44,7 @@ export default async function EventPage({ params, searchParams }: Props) {
   // Rebuild the list query from parsed filters so only known params survive.
   const rawBack = (await searchParams).back;
   const back: string =
-    typeof rawBack === "string"
-      ? toQueryString(
-          parseFilters(Object.fromEntries(new URLSearchParams(rawBack))),
-        )
-      : "";
+    typeof rawBack === "string" ? toQueryString(parseQueryString(rawBack)) : "";
   const event = await getEvent(id);
   if (!event) notFound();
   const href = safeHref(event.url);
@@ -90,15 +86,13 @@ export default async function EventPage({ params, searchParams }: Props) {
               <>
                 {" – "}
                 <time dateTime={event.endsAt.toISOString()}>
-                  {formatCardDate(event.endsAt)}
+                  {formatEndDate(event.startsAt, event.endsAt)}
                 </time>
               </>
             )}
           </dd>
           <dt className="font-medium">Where</dt>
           <dd>{event.isOnline ? "Online" : (event.venue ?? "In person")}</dd>
-          <dt className="font-medium">Type</dt>
-          <dd>{typeLabel(event.type)}</dd>
           {event.organiser && (
             <>
               <dt className="font-medium">Organiser</dt>
