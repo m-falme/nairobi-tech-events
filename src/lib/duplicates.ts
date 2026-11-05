@@ -49,15 +49,6 @@ export function titleSimilarity(a: string, b: string): number {
 
 export const SIMILARITY_THRESHOLD = 0.6;
 
-/** Host without "www.", used to fetch same-URL candidates from the DB. */
-export function urlHost(raw: string): string | null {
-  try {
-    return new URL(raw.trim()).host.toLowerCase().replace(/^www\./, "");
-  } catch {
-    return null;
-  }
-}
-
 /** Calendar day in Nairobi (EAT, UTC+3) as YYYY-MM-DD. */
 export function eatDay(d: Date): string {
   return new Date(d.getTime() + 3 * 3600_000).toISOString().slice(0, 10);

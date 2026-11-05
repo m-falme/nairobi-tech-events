@@ -1,3 +1,4 @@
+import { normaliseUrl } from "../duplicates";
 import type { EventStatus, ImportRunStatus } from "@prisma/client";
 import { adapters as defaultAdapters } from "./adapters";
 import { isImportAllowed } from "./allowlist";
@@ -50,6 +51,7 @@ export type ImportDb = {
     }): Promise<{ id: string; adminEditedAt: Date | null } | null>;
     create(args: {
       data: ImportedEvent & {
+        normalizedUrl: string;
         sourceId: string;
         status: EventStatus;
         timezone: string;
@@ -57,7 +59,7 @@ export type ImportDb = {
     }): Promise<unknown>;
     update(args: {
       where: { id: string };
-      data: Omit<ImportedEvent, "externalId">;
+      data: Omit<ImportedEvent, "externalId"> & { normalizedUrl: string };
     }): Promise<unknown>;
   };
 };
@@ -152,13 +154,14 @@ export async function runImport(deps: ImportDeps): Promise<SourceResult[]> {
             // Refresh text/time fields; never override an admin's status.
             await deps.db.event.update({
               where: { id: existing.id },
-              data: fields,
+              data: { ...fields, normalizedUrl: normaliseUrl(fields.url) },
             });
             updated++;
           } else {
             await deps.db.event.create({
               data: {
                 ...item,
+                normalizedUrl: normaliseUrl(item.url),
                 sourceId: source.id,
                 timezone: "Africa/Nairobi",
                 status: source.trusted ? "approved" : "pending",

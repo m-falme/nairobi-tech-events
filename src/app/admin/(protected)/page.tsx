@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { escapeLike } from "@/lib/filters";
-import { findDuplicates, urlHost } from "@/lib/duplicates";
+import { findDuplicates, normaliseUrl } from "@/lib/duplicates";
 import { formatEventDate } from "@/lib/format";
 import { focus } from "@/lib/ui";
 import { approveEvent, rejectEvent } from "./actions";
@@ -22,17 +21,14 @@ export default async function ReviewQueue({
   });
   // Same-URL candidates: any non-rejected event on the same host, any date.
   // Title candidates: non-rejected events near the pending dates.
-  const hosts = [
-    ...new Set(pending.map((p) => urlHost(p.url)).filter(Boolean)),
-  ] as string[];
+  const urls = [...new Set(pending.map((p) => normaliseUrl(p.url)))];
   const others = pending.length
     ? await prisma.event.findMany({
         where: {
           status: { not: "rejected" },
           OR: [
-            ...hosts.map((h) => ({
-              url: { contains: escapeLike(h), mode: "insensitive" as const },
-            })),
+            // Indexed exact match on the normalised URL.
+            { normalizedUrl: { in: urls } },
             {
               startsAt: {
                 gte: new Date(pending[0].startsAt.getTime() - DAY),

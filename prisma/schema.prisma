@@ -67,6 +67,8 @@ model Event {
   isOnline         Boolean     @default(false) @map("is_online")
   type             EventType
   url              String
+  /// normaliseUrl(url): set on every create/update, indexed for duplicate checks.
+  normalizedUrl    String?     @map("normalized_url")
   organiser        String?
   status           EventStatus @default(pending)
   submittedByEmail String?     @map("submitted_by_email")
@@ -79,6 +81,7 @@ model Event {
   // submissions/manual events with NULL source_id or external_id never collide.
   @@unique([sourceId, externalId])
   @@index([status, startsAt])
+  @@index([normalizedUrl])
   @@map("events")
 }
 
