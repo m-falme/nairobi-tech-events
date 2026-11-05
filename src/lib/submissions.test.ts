@@ -105,6 +105,10 @@ describe("clientIp / hashIp", () => {
     expect(trustedProxy({ TRUSTED_PROXY: "1" })).toBe(true);
     expect(trustedProxy({ TRUST_X_FORWARDED_FOR: "YES" })).toBe(true);
     expect(trustedProxy({ TRUSTED_PROXY: "no" })).toBe(false);
+    // Empty TRUSTED_PROXY= must not block the alternate env name.
+    expect(
+      trustedProxy({ TRUSTED_PROXY: "", TRUST_X_FORWARDED_FOR: "true" }),
+    ).toBe(true);
   });
 
   it("ignores XFF/X-Real-IP when TRUSTED_PROXY is unset (spoof-proof)", () => {

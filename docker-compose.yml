@@ -33,6 +33,7 @@ services:
       SITE_URL: ${SITE_URL:-http://localhost:3000}
       AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env}
       AUTH_TRUST_HOST: "true"
+      TRUSTED_PROXY: ${TRUSTED_PROXY:-}
     ports:
       - "3000:3000"
     depends_on:
