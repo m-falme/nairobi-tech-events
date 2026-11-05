@@ -91,6 +91,8 @@ export default async function Home({
       </p>
 
       <form
+        // Remount on navigation so default values match the URL (chips, Clear).
+        key={toQueryString(filters)}
         method="get"
         role="search"
         aria-label="Filter events"

@@ -1,3 +1,4 @@
+import { focus } from "@/lib/ui";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SiteFooter } from "@/components/site-footer";
@@ -36,8 +37,20 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <a
+            href="#content"
+            className={`sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-background focus:px-4 focus:py-3 focus:text-sm focus:font-medium focus:shadow ${focus}`}
+          >
+            Skip to content
+          </a>
           <SiteHeader />
-          <div className="flex flex-1 flex-col">{children}</div>
+          <div
+            id="content"
+            tabIndex={-1}
+            className="flex flex-1 flex-col outline-none"
+          >
+            {children}
+          </div>
           <SiteFooter />
         </ThemeProvider>
       </body>
