@@ -33,7 +33,7 @@ export default async function LoginPage({
       <h1 className="text-2xl font-bold">Admin sign in</h1>
       {error && (
         <p role="alert" className="mt-3 text-red-700">
-          Wrong email or password.
+          Sign-in failed. Check your details or try again later.
         </p>
       )}
       <form action={login} className="mt-4 grid gap-3">
