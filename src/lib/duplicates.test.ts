@@ -4,7 +4,6 @@ import {
   findDuplicates,
   normaliseUrl,
   titleSimilarity,
-  urlHost,
 } from "./duplicates";
 
 const ev = (id: string, title: string, url: string, startsAt: string) => ({
@@ -121,9 +120,5 @@ describe("same-URL across dates (queue scenario)", () => {
     expect(findDuplicates(pending, [approved])).toEqual([
       { id: "x", title: "Something else", reason: "same-url" },
     ]);
-  });
-  it("urlHost strips www and lowercases for the candidate query", () => {
-    expect(urlHost("https://WWW.Var.ke/e/")).toBe("var.ke");
-    expect(urlHost("notaurl")).toBeNull();
   });
 });

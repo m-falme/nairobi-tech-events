@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { normaliseUrl } from "../src/lib/duplicates";
+import { backfillNormalizedUrls } from "../src/lib/backfill-normalized-url";
 import { seedEvents, seedSources } from "./seed-data";
 
 const prisma = new PrismaClient();
@@ -38,6 +40,7 @@ async function main() {
   for (const { sourceKey, ...e } of seedEvents) {
     const data = {
       ...e,
+      normalizedUrl: normaliseUrl(e.url),
       sourceId: sourceKey ? ids[sourceKey] : null,
       startsAt: new Date(e.startsAt),
       endsAt: e.endsAt ? new Date(e.endsAt) : null,
@@ -65,6 +68,8 @@ async function main() {
     }
   }
 
+  const filled = await backfillNormalizedUrls(prisma);
+  console.log(`Backfilled normalized_url on ${filled} events`);
   console.log(
     `Seeded 1 admin, ${seedSources.length} sources, ${seedEvents.length} events`,
   );

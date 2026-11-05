@@ -1,3 +1,4 @@
+import { normaliseUrl } from "./duplicates";
 import { z } from "zod";
 import { assertAdmin, type MaybeSession } from "./authz";
 import { editSchema, formToObject, idSchema } from "./review";
@@ -59,7 +60,12 @@ export async function editAndApproveCore(
   const { id, ...data } = parsed.data;
   const { count } = await deps.db.event.updateMany({
     where: { id, status: "pending" },
-    data: { ...data, status: "approved", adminEditedAt: new Date() },
+    data: {
+      ...data,
+      normalizedUrl: normaliseUrl(data.url),
+      status: "approved",
+      adminEditedAt: new Date(),
+    },
   });
   return count === 0 ? { ok: false, error: NOT_PENDING } : { ok: true };
 }

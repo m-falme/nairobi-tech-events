@@ -17,6 +17,7 @@
     "db:seed": "prisma db seed",
     "postinstall": "prisma generate",
     "import": "tsx scripts/import.ts",
+    "db:backfill-urls": "tsx scripts/backfill-normalized-url.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {

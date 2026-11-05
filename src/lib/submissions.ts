@@ -1,3 +1,4 @@
+import { normaliseUrl } from "./duplicates";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { EVENT_TYPES } from "./filters";
@@ -137,6 +138,7 @@ export async function submitCore(
   await deps.db.event.create({
     data: {
       ...parsed.data,
+      normalizedUrl: normaliseUrl(parsed.data.url),
       status: "pending",
       sourceId: null,
     },

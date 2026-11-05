@@ -21,6 +21,7 @@ The `migrate` service runs `prisma migrate deploy` and the seed (2 sources, 10 s
 npm run db:migrate   # create/apply migrations in dev
 npm run db:deploy    # apply migrations (prod/CI)
 npm run db:seed      # seed sample data (needs ADMIN_SEED_PASSWORD)
+npm run db:backfill-urls  # fill events.normalized_url on existing rows (seed also does this)
 ```
 
 ## Run locally without Docker

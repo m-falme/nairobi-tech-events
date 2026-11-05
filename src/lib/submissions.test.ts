@@ -153,6 +153,7 @@ describe("submitCore", () => {
       status: "pending",
       sourceId: null,
       url: "https://lu.ma/x",
+      normalizedUrl: "lu.ma/x",
     });
   });
   it("defaults to in person when the Online box is unticked", async () => {

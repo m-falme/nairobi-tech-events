@@ -1,3 +1,4 @@
+import { normaliseUrl } from "../duplicates";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
@@ -371,6 +372,8 @@ describe("runImport", () => {
     ).toEqual(["pending", "pending"]);
     expect(events.find((e) => e.sourceId === "s2")?.status).toBe("approved");
     expect(runs).toHaveLength(2);
+    for (const e of events)
+      expect(e.normalizedUrl).toBe(normaliseUrl(e.url as string));
     expect(runs[0]).toMatchObject({ status: "success", added: 2, updated: 0 });
     expect(runs[0].finishedAt).toBeInstanceOf(Date);
   });
@@ -389,6 +392,13 @@ describe("runImport", () => {
       status: "rejected",
       title: "Nairobi AI Builders Meetup",
     });
+    events[0].normalizedUrl = "stale";
+    await runImport({
+      db,
+      fetchText: fakeFetch,
+      now: () => new Date(later.getTime() + MIN_INTERVAL_MS),
+    });
+    expect(events[0].normalizedUrl).toBe(normaliseUrl(events[0].url as string));
   });
 
   it("does not overwrite events an admin has edited", async () => {
