@@ -117,3 +117,13 @@ model SubmissionAttempt {
   @@index([ipHash, createdAt])
   @@map("submission_attempts")
 }
+
+/// Failed admin sign-in attempts (salted IP hash only), for rate limiting.
+model LoginAttempt {
+  id        String   @id @default(uuid()) @db.Uuid
+  ipHash    String   @map("ip_hash")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([ipHash, createdAt])
+  @@map("login_attempts")
+}

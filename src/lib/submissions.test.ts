@@ -3,6 +3,7 @@ import {
   checkRateLimit,
   clientIp,
   hashIp,
+  trustedProxy,
   ipSalt,
   RATE_WINDOW_MS,
   submissionSchema,
@@ -95,15 +96,40 @@ describe("clientIp / hashIp", () => {
   const h = (o: Record<string, string>) => ({
     get: (k: string) => o[k] ?? null,
   });
-  it("uses the first x-forwarded-for hop", () => {
-    expect(clientIp(h({ "x-forwarded-for": " 41.90.1.2 , 10.0.0.1" }))).toBe(
+  const off = { TRUSTED_PROXY: undefined, TRUST_X_FORWARDED_FOR: undefined };
+  const on = { TRUSTED_PROXY: "true" };
+
+  it("trustedProxy accepts true/1/yes (case-insensitive)", () => {
+    expect(trustedProxy(off)).toBe(false);
+    expect(trustedProxy({ TRUSTED_PROXY: "true" })).toBe(true);
+    expect(trustedProxy({ TRUSTED_PROXY: "1" })).toBe(true);
+    expect(trustedProxy({ TRUST_X_FORWARDED_FOR: "YES" })).toBe(true);
+    expect(trustedProxy({ TRUSTED_PROXY: "no" })).toBe(false);
+  });
+
+  it("ignores XFF/X-Real-IP when TRUSTED_PROXY is unset (spoof-proof)", () => {
+    expect(clientIp(h({ "x-forwarded-for": "1.2.3.4" }), off)).toBe("direct");
+    expect(clientIp(h({ "x-real-ip": "5.6.7.8" }), off)).toBe("direct");
+    // Changing XFF must not create a new rate-limit bucket.
+    expect(clientIp(h({ "x-forwarded-for": "9.9.9.9" }), off)).toBe(
+      clientIp(h({ "x-forwarded-for": "8.8.8.8" }), off),
+    );
+  });
+
+  it("with TRUSTED_PROXY, uses the rightmost XFF hop the proxy added", () => {
+    expect(
+      clientIp(h({ "x-forwarded-for": "  spoofed , 41.90.1.2 " }), on),
+    ).toBe("41.90.1.2");
+    expect(clientIp(h({ "x-forwarded-for": "41.90.1.2" }), on)).toBe(
       "41.90.1.2",
     );
   });
-  it("falls back to x-real-ip, then unknown", () => {
-    expect(clientIp(h({ "x-real-ip": "41.90.1.3" }))).toBe("41.90.1.3");
-    expect(clientIp(h({ "x-forwarded-for": "" }))).toBe("unknown");
+
+  it("with TRUSTED_PROXY, falls back to x-real-ip then direct", () => {
+    expect(clientIp(h({ "x-real-ip": "41.90.1.3" }), on)).toBe("41.90.1.3");
+    expect(clientIp(h({ "x-forwarded-for": "" }), on)).toBe("direct");
   });
+
   it("hashes with a salt and never returns the raw IP", () => {
     const a = hashIp("41.90.1.2", "s1");
     expect(a).toMatch(/^[0-9a-f]{64}$/);
