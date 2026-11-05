@@ -1,11 +1,9 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { SITE_NAME } from "@/lib/site";
-import { contentWidth, gutter } from "@/lib/ui";
+import { contentWidth, focus, gutter } from "@/lib/ui";
 
-const ring =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
-const link = `inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium text-muted-foreground hover:text-foreground ${ring}`;
+const link = `inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium text-muted-foreground hover:text-foreground ${focus}`;
 
 /** Sticky public shell: app name, primary nav, theme toggle. */
 export function SiteHeader() {
@@ -16,7 +14,7 @@ export function SiteHeader() {
       >
         <Link
           href="/"
-          className={`inline-flex min-h-11 shrink-0 items-center font-semibold tracking-tight ${ring}`}
+          className={`inline-flex min-h-11 shrink-0 items-center font-semibold tracking-tight ${focus}`}
         >
           {SITE_NAME}
         </Link>
