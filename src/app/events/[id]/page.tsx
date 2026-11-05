@@ -1,3 +1,4 @@
+import { ExternalLink } from "@/components/external-link";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -92,15 +93,12 @@ export default async function EventPage({ params }: Props) {
           <div className="mt-6 whitespace-pre-line">{event.description}</div>
         )}
         {href && (
-          <a
+          <ExternalLink
             href={href}
-            target="_blank"
-            rel="noopener noreferrer"
             className={`mt-6 inline-block rounded bg-blue-700 px-4 py-2 text-white hover:bg-blue-800 ${focus}`}
           >
             Official event page
-            <span className="sr-only"> (opens in new tab)</span>
-          </a>
+          </ExternalLink>
         )}
       </article>
     </main>

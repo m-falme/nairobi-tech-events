@@ -1,3 +1,4 @@
+import { ExternalLink } from "@/components/external-link";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
@@ -67,13 +68,12 @@ export default async function SourcesPage() {
                   <td className="py-2 pr-4">{s.status}</td>
                   <td className="py-2">
                     {s.link ? (
-                      <a
+                      <ExternalLink
                         href={s.link}
-                        rel="noopener noreferrer"
                         className={`underline ${focus}`}
                       >
                         Visit<span className="sr-only"> {s.name}</span>
-                      </a>
+                      </ExternalLink>
                     ) : (
                       "—"
                     )}
@@ -89,13 +89,9 @@ export default async function SourcesPage() {
       <ul className="mt-2 list-disc space-y-1 pl-5">
         {PLATFORM_SUMMARY.map((p) => (
           <li key={p.platform}>
-            <a
-              href={p.link}
-              rel="noopener noreferrer"
-              className={`underline ${focus}`}
-            >
+            <ExternalLink href={p.link} className={`underline ${focus}`}>
               {p.platform}
-            </a>
+            </ExternalLink>
             : {p.method}
           </li>
         ))}
