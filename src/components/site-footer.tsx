@@ -12,7 +12,7 @@ export function SiteFooter() {
         {SITE_NAME} · a community board of tech events in Nairobi ·{" "}
         <Link
           href="/sources"
-          className={`underline hover:text-foreground ${focus}`}
+          className={`inline-flex min-h-11 items-center underline hover:text-foreground ${focus}`}
         >
           Where listings come from
         </Link>
