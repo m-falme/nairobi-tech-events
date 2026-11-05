@@ -46,18 +46,20 @@ export default async function ReviewQueue({
 
   return (
     <main className="mt-6">
-      <h1 className="text-2xl font-bold">Pending events ({total})</h1>
+      <h1 className="text-2xl font-bold tracking-tight">
+        Pending events ({total})
+      </h1>
       {notice === "not-pending" && (
         <p
           role="alert"
-          className="mt-3 rounded border border-amber-500 bg-amber-50 p-2"
+          className="mt-3 rounded border border-amber-500 bg-amber-50 dark:bg-amber-950/40 p-2"
         >
           That event was no longer pending (already reviewed?). Nothing was
           changed.
         </p>
       )}
       {total > pending.length && (
-        <p className="mt-1 text-sm text-gray-700">
+        <p className="mt-1 text-sm text-muted-foreground">
           Showing {pending.length} of {total} (soonest first).
         </p>
       )}
@@ -72,7 +74,7 @@ export default async function ReviewQueue({
             return (
               <li key={e.id} className="rounded border p-4">
                 <h2 className="text-lg font-semibold">{e.title}</h2>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-muted-foreground">
                   <time dateTime={e.startsAt.toISOString()}>
                     {formatEventDate(e.startsAt)}
                   </time>
@@ -83,11 +85,13 @@ export default async function ReviewQueue({
                   {" · "}
                   {e.source ? `via ${e.source.name}` : "Submitted"}
                 </p>
-                <p className="text-sm break-all text-gray-700">{e.url}</p>
+                <p className="text-sm break-all text-muted-foreground">
+                  {e.url}
+                </p>
                 {dups.length > 0 && (
                   <div
                     role="status"
-                    className="mt-2 rounded border border-amber-500 bg-amber-50 p-2 text-sm"
+                    className="mt-2 rounded border border-amber-500 bg-amber-50 dark:bg-amber-950/40 p-2 text-sm"
                   >
                     <p className="font-medium">Possible duplicate of:</p>
                     <ul className="list-disc pl-5">

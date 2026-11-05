@@ -17,8 +17,8 @@ export default async function SourcesPage() {
   const sources = await prisma.source.findMany({ orderBy: { name: "asc" } });
   return (
     <main className="mt-6">
-      <h1 className="text-2xl font-bold">Sources</h1>
-      <p className="mt-1 text-sm text-gray-700">
+      <h1 className="text-2xl font-bold tracking-tight">Sources</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
         The importer only fetches active iCal sources on the approved Luma
         allowlist (see SOURCES.md), at most every 6 hours.
       </p>
@@ -27,13 +27,15 @@ export default async function SourcesPage() {
           <li key={s.id} className="p-3 text-sm">
             <p className="font-medium">
               {s.name}{" "}
-              <span className="text-gray-600">
+              <span className="text-muted-foreground">
                 ({s.kind}
                 {s.trusted ? ", trusted" : ""}
                 {s.active ? "" : ", inactive"})
               </span>
             </p>
-            {s.url && <p className="break-all text-gray-700">{s.url}</p>}
+            {s.url && (
+              <p className="break-all text-muted-foreground">{s.url}</p>
+            )}
             <p>
               {isImportAllowed(s)
                 ? "Importable"
@@ -41,7 +43,7 @@ export default async function SourcesPage() {
               {" · "}Last fetched: {fmt(s.lastFetchedAt)}
             </p>
             {s.lastError && (
-              <p className="text-red-700">Last error: {s.lastError}</p>
+              <p className="text-destructive">Last error: {s.lastError}</p>
             )}
           </li>
         ))}

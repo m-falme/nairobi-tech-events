@@ -1,3 +1,4 @@
+import { focus, shell } from "@/lib/ui";
 import Link from "next/link";
 import { listEvents } from "@/lib/events";
 import {
@@ -8,9 +9,6 @@ import {
   type RawSearchParams,
 } from "@/lib/filters";
 import { formatEventDate } from "@/lib/format";
-
-const focus =
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700";
 
 export const dynamic = "force-dynamic";
 
@@ -32,9 +30,9 @@ export default async function Home({
   );
 
   return (
-    <main className="mx-auto max-w-3xl p-8">
-      <h1 className="text-3xl font-bold">Nairobi Tech Events</h1>
-      <p className="mt-2 text-gray-700">
+    <main className={shell}>
+      <h1 className="text-3xl font-bold tracking-tight">Nairobi Tech Events</h1>
+      <p className="mt-2 text-muted-foreground">
         Upcoming hackathons, meetups, workshops and conferences in Nairobi.
       </p>
       <p className="mt-2">
@@ -114,7 +112,7 @@ export default async function Home({
             <option value="month">This month</option>
           </select>
         </div>
-        <p className="text-sm text-gray-700 sm:col-span-2">
+        <p className="text-sm text-muted-foreground sm:col-span-2">
           Custom range (dates in EAT; combines with the Date preset):
         </p>
         <div>
@@ -144,7 +142,7 @@ export default async function Home({
         <div className="flex gap-3 sm:col-span-2">
           <button
             type="submit"
-            className={`rounded bg-blue-700 px-4 py-1 text-white hover:bg-blue-800 ${focus}`}
+            className={`rounded bg-primary px-4 py-1 text-primary-foreground hover:bg-primary/90 ${focus}`}
           >
             Apply filters
           </button>
@@ -156,14 +154,14 @@ export default async function Home({
         </div>
       </form>
 
-      <p className="mt-6 text-sm text-gray-700" aria-live="polite">
+      <p className="mt-6 text-sm text-muted-foreground" aria-live="polite">
         {count} upcoming {count === 1 ? "event" : "events"}
       </p>
 
       {events.length === 0 ? (
         <div className="mt-4 rounded border border-dashed p-6 text-center">
           <h2 className="text-lg font-semibold">No events found</h2>
-          <p className="mt-1 text-gray-700">
+          <p className="mt-1 text-muted-foreground">
             {hasFilters
               ? "Try removing some filters."
               : "No upcoming events yet. Check back soon."}
@@ -182,7 +180,7 @@ export default async function Home({
                     {e.title}
                   </Link>
                 </h2>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-muted-foreground">
                   <time dateTime={e.startsAt.toISOString()}>
                     {formatEventDate(e.startsAt)}
                   </time>
@@ -191,7 +189,7 @@ export default async function Home({
                   {" · "}
                   <span className="capitalize">{e.type}</span>
                 </p>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-muted-foreground">
                   {e.source ? `via ${e.source.name}` : "Submitted"}
                   {e.organiser && <> · By {e.organiser}</>}
                 </p>

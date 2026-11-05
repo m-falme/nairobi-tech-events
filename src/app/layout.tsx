@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import "./globals.css";
@@ -27,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-background text-foreground antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col bg-background text-foreground antialiased`}
       >
         <ThemeProvider
           attribute="class"
@@ -36,7 +37,8 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <SiteHeader />
-          {children}
+          <div className="flex flex-1 flex-col">{children}</div>
+          <SiteFooter />
         </ThemeProvider>
       </body>
     </html>

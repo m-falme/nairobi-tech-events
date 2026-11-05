@@ -20,14 +20,14 @@ export function SourceForm() {
       : {};
   const Err = ({ n }: { n: string }) =>
     err[n]?.length ? (
-      <p id={`src-${n}-error`} className="text-sm text-red-700">
+      <p id={`src-${n}-error`} className="text-sm text-destructive">
         {err[n].join(", ")}
       </p>
     ) : null;
   return (
     <form action={action} className="mt-4 grid gap-3" noValidate>
       {state.ok && (
-        <p role="status" className="text-green-800">
+        <p role="status" className="text-green-800 dark:text-green-200">
           Source added.
         </p>
       )}
@@ -94,7 +94,7 @@ export function SourceForm() {
         <button
           type="submit"
           disabled={pending}
-          className={`rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-60 ${focus}`}
+          className={`rounded bg-primary px-4 py-2 text-primary-foreground disabled:opacity-60 ${focus}`}
         >
           {pending ? "Adding…" : "Add source"}
         </button>

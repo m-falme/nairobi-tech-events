@@ -18,7 +18,7 @@ export function SubmitForm() {
     return (
       <div
         role="status"
-        className="mt-6 rounded border border-green-600 bg-green-50 p-4"
+        className="mt-6 rounded border border-green-600 bg-green-50 dark:bg-green-950/40 p-4"
       >
         <h2 className="text-lg font-semibold">
           Thanks! Your event is pending review.
@@ -37,7 +37,7 @@ export function SubmitForm() {
       : {};
   const Err = ({ n }: { n: string }) =>
     err[n]?.length ? (
-      <p id={`${n}-error`} className="text-sm text-red-700">
+      <p id={`${n}-error`} className="text-sm text-destructive">
         {err[n].join(", ")}
       </p>
     ) : null;
@@ -45,12 +45,15 @@ export function SubmitForm() {
   return (
     <form action={action} className="mt-6 grid gap-4" noValidate>
       {state.status === "rate-limited" && (
-        <p role="alert" className="rounded border border-red-600 bg-red-50 p-2">
+        <p
+          role="alert"
+          className="rounded border border-red-600 bg-red-50 dark:bg-red-950/40 p-2"
+        >
           Too many submissions from your network. Please try again in an hour.
         </p>
       )}
       {Object.keys(err).length > 0 && (
-        <p role="alert" className="text-red-700">
+        <p role="alert" className="text-destructive">
           Please fix the highlighted fields.
         </p>
       )}
@@ -149,7 +152,7 @@ export function SubmitForm() {
         <label htmlFor="isOnline" className="text-sm font-medium">
           Online event
         </label>
-        <span id="isOnline-hint" className="text-sm text-gray-700">
+        <span id="isOnline-hint" className="text-sm text-muted-foreground">
           (venue is optional)
         </span>
       </div>
@@ -201,7 +204,7 @@ export function SubmitForm() {
         <button
           type="submit"
           disabled={pending}
-          className={`rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-60 ${focus}`}
+          className={`rounded bg-primary px-4 py-2 text-primary-foreground disabled:opacity-60 ${focus}`}
         >
           {pending ? "Submitting…" : "Submit for review"}
         </button>
