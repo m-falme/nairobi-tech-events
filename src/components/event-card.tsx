@@ -30,7 +30,7 @@ export function EventCard({ e, back = "" }: { e: CardEvent; back?: string }) {
           {e.title}
         </Link>
       </h2>
-      <dl className="mt-auto space-y-0.5 text-sm text-muted-foreground">
+      <dl className="space-y-0.5 text-sm text-muted-foreground">
         <div>
           <dt className="sr-only">When</dt>
           <dd>
