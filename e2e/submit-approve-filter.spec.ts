@@ -118,4 +118,15 @@ test("/sources lists feeds without internal details", async ({ page }) => {
   ]);
   await expect(table.getByRole("row")).not.toHaveCount(1);
   await expect(page.getByText(/last error/i)).toHaveCount(0);
+  await expect(table.getByRole("cell", { name: "Manual entry" })).toHaveCount(
+    1,
+  );
+  // Every outbound link opens a new tab safely and says so.
+  const external = page.locator('main a[href^="http"]');
+  expect(await external.count()).toBeGreaterThan(0);
+  for (const a of await external.all()) {
+    await expect(a).toHaveAttribute("target", "_blank");
+    await expect(a).toHaveAttribute("rel", "noopener noreferrer");
+    await expect(a).toContainText("(opens in new tab)");
+  }
 });

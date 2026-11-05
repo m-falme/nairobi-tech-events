@@ -5,6 +5,11 @@ import { toPublicSource } from "./public-sources";
 const base = { id: "1", name: "X", kind: "ical", active: true };
 
 describe("toPublicSource", () => {
+  it("labels manual sources as 'Manual entry', not the raw kind", () => {
+    expect(toPublicSource({ ...base, kind: "manual", url: null }).method).toBe(
+      "Manual entry",
+    );
+  });
   it("links approved Luma feeds to the public calendar page", () => {
     const p = toPublicSource({
       ...base,

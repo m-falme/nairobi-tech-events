@@ -19,6 +19,7 @@ const METHOD: Record<string, string> = {
   ical: "Official iCal feed",
   rss: "Official RSS feed",
   api: "Official API",
+  manual: "Manual entry",
 };
 
 /**
