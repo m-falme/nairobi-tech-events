@@ -38,12 +38,13 @@ function fakeDb() {
       deleteMany: async ({
         where,
       }: {
-        where: { id: string } | { createdAt: { lt: Date } };
+        where:
+          { id: string } | { ipHash: string } | { createdAt: { lt: Date } };
       }) => {
-        rows =
-          "id" in where
-            ? rows.filter((r) => r.id !== where.id)
-            : rows.filter((r) => r.createdAt >= where.createdAt.lt);
+        if ("id" in where) rows = rows.filter((r) => r.id !== where.id);
+        else if ("ipHash" in where)
+          rows = rows.filter((r) => r.ipHash !== where.ipHash);
+        else rows = rows.filter((r) => r.createdAt >= where.createdAt.lt);
       },
     },
   } as unknown as LoginLimitDb;
@@ -97,6 +98,28 @@ describe("login rate limit", () => {
         await limitedLogin({ db, ipHash: "a", now: t0, verify: good }),
       ).toBe(true);
     expect(rows()).toHaveLength(0);
+  });
+
+  it("a success wipes every prior failure for that IP (full reset)", async () => {
+    // Live bug: 4 fails → success → 1 fail → correct password was blocked
+    // because only the reservation row was deleted, leaving 4 failures.
+    const { db, rows } = fakeDb();
+    for (let i = 0; i < 4; i++)
+      expect(
+        await limitedLogin({ db, ipHash: "a", now: t0, verify: bad }),
+      ).toBe(false);
+    expect(rows()).toHaveLength(4);
+    expect(await limitedLogin({ db, ipHash: "a", now: t0, verify: good })).toBe(
+      true,
+    );
+    expect(rows()).toHaveLength(0);
+    expect(await limitedLogin({ db, ipHash: "a", now: t0, verify: bad })).toBe(
+      false,
+    );
+    expect(rows()).toHaveLength(1);
+    expect(await limitedLogin({ db, ipHash: "a", now: t0, verify: good })).toBe(
+      true,
+    );
   });
 
   it("takes a per-IP advisory lock separate from the submission lock", async () => {

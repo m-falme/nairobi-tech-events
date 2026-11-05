@@ -40,14 +40,43 @@ export const submissionSchema = z
     path: ["endsAt"],
   });
 
-/** First hop of x-forwarded-for, then x-real-ip, else "unknown". */
-export function clientIp(headers: {
-  get(name: string): string | null;
-}): string {
-  const xff = headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  if (xff) return xff;
+/**
+ * Client IP for rate limiting.
+ *
+ * X-Forwarded-For / X-Real-IP are only trusted when TRUSTED_PROXY=true
+ * (also accepts TRUST_X_FORWARDED_FOR=true). Behind a single reverse proxy
+ * that appends the connecting IP, we take the *rightmost* XFF hop — the one
+ * the proxy added. Spoofed left-hand hops are ignored.
+ *
+ * When the flag is unset/false (local next start, tests), those headers are
+ * ignored and every request shares the bucket "direct", so a client cannot
+ * bypass the limit by inventing a new XFF on each attempt.
+ */
+export function trustedProxy(
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  const v = (env.TRUSTED_PROXY ?? env.TRUST_X_FORWARDED_FOR ?? "")
+    .trim()
+    .toLowerCase();
+  return v === "1" || v === "true" || v === "yes";
+}
+
+export function clientIp(
+  headers: { get(name: string): string | null },
+  env: Record<string, string | undefined> = process.env,
+): string {
+  if (!trustedProxy(env)) return "direct";
+  const xff = headers.get("x-forwarded-for");
+  if (xff) {
+    const hops = xff
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    // Rightmost hop = value the trusted proxy appended/overwrote.
+    if (hops.length) return hops[hops.length - 1]!;
+  }
   const real = headers.get("x-real-ip")?.trim();
-  return real || "unknown";
+  return real || "direct";
 }
 
 /** Salted SHA-256 of the IP, so raw addresses are never stored. */

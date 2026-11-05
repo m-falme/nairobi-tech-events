@@ -9,7 +9,7 @@ type LoginAttemptTable = {
     data: { ipHash: string; createdAt: Date };
   }): Promise<{ id: string }>;
   deleteMany(args: {
-    where: { id: string } | { createdAt: { lt: Date } };
+    where: { id: string } | { ipHash: string } | { createdAt: { lt: Date } };
   }): Promise<unknown>;
 };
 
@@ -30,7 +30,7 @@ export type LoginLimitDb = LoginLimitTx & {
  * counts failures in the window and, if under the limit, records this attempt
  * as a failure up front (returning its id). Returns null when blocked.
  * Recording before the password check means concurrent guesses can't slip
- * past the limit; a successful login clears its reservation.
+ * past the limit; a successful login clears every attempt for that IP.
  */
 export async function reserveLoginAttempt(
   db: LoginLimitDb,
@@ -53,9 +53,12 @@ export async function reserveLoginAttempt(
   });
 }
 
-/** Successful login: drop the reservation so it doesn't count as a failure. */
-export async function clearLoginAttempt(db: LoginLimitDb, id: string) {
-  await db.loginAttempt.deleteMany({ where: { id } });
+/**
+ * Successful login: wipe every recent failure for this IP hash so the user
+ * starts fresh (4 fails → success → 1 fail must still leave 4 slots).
+ */
+export async function clearLoginAttempts(db: LoginLimitDb, ipHash: string) {
+  await db.loginAttempt.deleteMany({ where: { ipHash } });
 }
 
 export type LoginCheck = {
@@ -75,6 +78,6 @@ export async function limitedLogin({
   const id = await reserveLoginAttempt(db, ipHash, now);
   if (!id) return false;
   const ok = await verify();
-  if (ok) await clearLoginAttempt(db, id);
+  if (ok) await clearLoginAttempts(db, ipHash);
   return ok;
 }
