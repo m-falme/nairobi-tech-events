@@ -3,10 +3,15 @@
 import { useActionState } from "react";
 import { EVENT_TYPES } from "@/lib/filters";
 import { HONEYPOT_FIELD, type SubmitState } from "@/lib/submission-form";
-import { focus } from "@/lib/ui";
+import {
+  alertError,
+  alertSuccess,
+  btnPrimary,
+  focus,
+  input,
+  label,
+} from "@/lib/ui";
 import { submitEvent } from "./actions";
-
-const input = `mt-1 w-full rounded border px-2 py-1 ${focus}`;
 
 export function SubmitForm() {
   const [state, action, pending] = useActionState<SubmitState, FormData>(
@@ -16,10 +21,7 @@ export function SubmitForm() {
 
   if (state.status === "pending-review")
     return (
-      <div
-        role="status"
-        className="mt-6 rounded border border-green-600 bg-green-50 dark:bg-green-950/40 p-4"
-      >
+      <div role="status" className={alertSuccess}>
         <h2 className="text-lg font-semibold">
           Thanks! Your event is pending review.
         </h2>
@@ -43,22 +45,19 @@ export function SubmitForm() {
     ) : null;
 
   return (
-    <form action={action} className="mt-6 grid gap-4" noValidate>
+    <form action={action} className="grid gap-4" noValidate>
       {state.status === "rate-limited" && (
-        <p
-          role="alert"
-          className="rounded border border-red-600 bg-red-50 dark:bg-red-950/40 p-2"
-        >
+        <p role="alert" className={alertError}>
           Too many submissions from your network. Please try again in an hour.
         </p>
       )}
       {Object.keys(err).length > 0 && (
-        <p role="alert" className="text-destructive">
+        <p role="alert" className={alertError}>
           Please fix the highlighted fields.
         </p>
       )}
       <div>
-        <label htmlFor="title" className="block text-sm font-medium">
+        <label htmlFor="title" className={label}>
           Title (required)
         </label>
         <input
@@ -73,7 +72,7 @@ export function SubmitForm() {
         <Err n="title" />
       </div>
       <div>
-        <label htmlFor="startsAt" className="block text-sm font-medium">
+        <label htmlFor="startsAt" className={label}>
           Starts, EAT (required)
         </label>
         <input
@@ -88,7 +87,7 @@ export function SubmitForm() {
         <Err n="startsAt" />
       </div>
       <div>
-        <label htmlFor="endsAt" className="block text-sm font-medium">
+        <label htmlFor="endsAt" className={label}>
           Ends, EAT (optional)
         </label>
         <input
@@ -102,7 +101,7 @@ export function SubmitForm() {
         <Err n="endsAt" />
       </div>
       <div>
-        <label htmlFor="url" className="block text-sm font-medium">
+        <label htmlFor="url" className={label}>
           Official event URL (required)
         </label>
         <input
@@ -118,7 +117,7 @@ export function SubmitForm() {
         <Err n="url" />
       </div>
       <div>
-        <label htmlFor="type" className="block text-sm font-medium">
+        <label htmlFor="type" className={label}>
           Type (required)
         </label>
         <select
@@ -140,13 +139,13 @@ export function SubmitForm() {
         </select>
         <Err n="type" />
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex min-h-11 flex-wrap items-center gap-2">
         <input
           id="isOnline"
           name="isOnline"
           type="checkbox"
           defaultChecked={v.isOnline === "on"}
-          className={focus}
+          className={`size-5 accent-primary ${focus}`}
           aria-describedby="isOnline-hint"
         />
         <label htmlFor="isOnline" className="text-sm font-medium">
@@ -157,7 +156,7 @@ export function SubmitForm() {
         </span>
       </div>
       <div>
-        <label htmlFor="venue" className="block text-sm font-medium">
+        <label htmlFor="venue" className={label}>
           Venue (optional)
         </label>
         <input
@@ -171,7 +170,7 @@ export function SubmitForm() {
         <Err n="venue" />
       </div>
       <div>
-        <label htmlFor="description" className="block text-sm font-medium">
+        <label htmlFor="description" className={label}>
           Description (optional)
         </label>
         <textarea
@@ -201,11 +200,7 @@ export function SubmitForm() {
         />
       </div>
       <div>
-        <button
-          type="submit"
-          disabled={pending}
-          className={`rounded bg-primary px-4 py-2 text-primary-foreground disabled:opacity-60 ${focus}`}
-        >
+        <button type="submit" disabled={pending} className={btnPrimary}>
           {pending ? "Submitting…" : "Submit for review"}
         </button>
       </div>

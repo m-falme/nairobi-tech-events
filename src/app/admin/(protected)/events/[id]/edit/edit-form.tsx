@@ -2,7 +2,13 @@
 
 import { useActionState } from "react";
 import { EVENT_TYPES } from "@/lib/filters";
-import { focus } from "@/lib/ui";
+import {
+  alertError,
+  btnApprove,
+  focus,
+  input,
+  label as labelCls,
+} from "@/lib/ui";
 import { editAndApprove, type EditState } from "../../../actions";
 
 type Values = {
@@ -18,8 +24,6 @@ type Values = {
   url: string;
 };
 
-const input = `mt-1 w-full rounded border px-2 py-1 ${focus}`;
-
 function Field({
   name,
   label,
@@ -33,7 +37,7 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={name} className="block text-sm font-medium">
+      <label htmlFor={name} className={labelCls}>
         {label}
       </label>
       {children}
@@ -59,7 +63,7 @@ export function EditForm({ event }: { event: Values }) {
   return (
     <form action={action} className="mt-4 grid gap-3">
       {state.error && (
-        <p role="alert" className="text-destructive">
+        <p role="alert" className={alertError}>
           {state.error}
         </p>
       )}
@@ -133,7 +137,7 @@ export function EditForm({ event }: { event: Values }) {
           type="checkbox"
           name="isOnline"
           defaultChecked={event.isOnline}
-          className={focus}
+          className={`size-5 accent-primary ${focus}`}
         />
         Online event
       </label>
@@ -155,11 +159,7 @@ export function EditForm({ event }: { event: Values }) {
         />
       </Field>
       <div>
-        <button
-          type="submit"
-          disabled={pending}
-          className={`rounded bg-green-700 px-4 py-1 text-white disabled:opacity-60 ${focus}`}
-        >
+        <button type="submit" disabled={pending} className={btnApprove}>
           {pending ? "Saving…" : "Save and approve"}
         </button>
       </div>

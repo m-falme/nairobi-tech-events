@@ -30,3 +30,9 @@ const timeFmt = new Intl.DateTimeFormat("en-GB", {
 export function formatCardDate(d: Date): string {
   return `${dateFmt.format(d)} · ${timeFmt.format(d)} EAT`;
 }
+
+/** "yyyy-mm-dd" → "dd/mm/yyyy" (filter chips). */
+export function formatIsoDay(s: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : s;
+}

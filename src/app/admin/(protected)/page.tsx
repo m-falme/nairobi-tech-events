@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { findDuplicates, normaliseUrl } from "@/lib/duplicates";
-import { formatEventDate } from "@/lib/format";
-import { focus } from "@/lib/ui";
+import { formatCardDate } from "@/lib/format";
+import { typeBadgeClass, typeLabel } from "@/lib/event-type";
+import { alertWarn, btnApprove, btnOutline, btnReject } from "@/lib/ui";
 import { approveEvent, rejectEvent } from "./actions";
 
 const DAY = 24 * 3600_000;
@@ -50,10 +51,7 @@ export default async function ReviewQueue({
         Pending events ({total})
       </h1>
       {notice === "not-pending" && (
-        <p
-          role="alert"
-          className="mt-3 rounded border border-amber-500 bg-amber-50 dark:bg-amber-950/40 p-2"
-        >
+        <p role="alert" className={`mt-3 ${alertWarn}`}>
           That event was no longer pending (already reviewed?). Nothing was
           changed.
         </p>
@@ -64,7 +62,7 @@ export default async function ReviewQueue({
         </p>
       )}
       {pending.length === 0 ? (
-        <p className="mt-4 rounded border border-dashed p-6 text-center">
+        <p className="mt-4 rounded-lg border border-dashed border-border p-6 text-center text-muted-foreground">
           Nothing to review.
         </p>
       ) : (
@@ -72,16 +70,22 @@ export default async function ReviewQueue({
           {pending.map((e) => {
             const dups = findDuplicates(e, others);
             return (
-              <li key={e.id} className="rounded border p-4">
-                <h2 className="text-lg font-semibold">{e.title}</h2>
+              <li
+                key={e.id}
+                className="rounded-lg border border-border bg-card p-4 shadow-sm"
+              >
+                <span
+                  className={`inline-block rounded-full border px-2 py-0.5 text-xs font-medium ${typeBadgeClass(e.type)}`}
+                >
+                  {typeLabel(e.type)}
+                </span>
+                <h2 className="mt-1 text-lg font-semibold">{e.title}</h2>
                 <p className="text-sm text-muted-foreground">
                   <time dateTime={e.startsAt.toISOString()}>
-                    {formatEventDate(e.startsAt)}
+                    {formatCardDate(e.startsAt)}
                   </time>
                   {" · "}
                   {e.isOnline ? "Online" : (e.venue ?? "In person")}
-                  {" · "}
-                  <span className="capitalize">{e.type}</span>
                   {" · "}
                   {e.source ? `via ${e.source.name}` : "Submitted"}
                 </p>
@@ -89,11 +93,8 @@ export default async function ReviewQueue({
                   {e.url}
                 </p>
                 {dups.length > 0 && (
-                  <div
-                    role="status"
-                    className="mt-2 rounded border border-amber-500 bg-amber-50 dark:bg-amber-950/40 p-2 text-sm"
-                  >
-                    <p className="font-medium">Possible duplicate of:</p>
+                  <div role="alert" className={`mt-3 ${alertWarn}`}>
+                    <p className="font-semibold">⚠ Possible duplicate of:</p>
                     <ul className="list-disc pl-5">
                       {dups.map((d) => (
                         <li key={d.id}>
@@ -113,7 +114,7 @@ export default async function ReviewQueue({
                     <button
                       type="submit"
                       aria-label={`Approve: ${e.title}`}
-                      className={`rounded bg-green-700 px-3 py-1 text-white ${focus}`}
+                      className={btnApprove}
                     >
                       Approve
                     </button>
@@ -121,7 +122,7 @@ export default async function ReviewQueue({
                   <Link
                     href={`/admin/events/${e.id}/edit`}
                     aria-label={`Edit and approve: ${e.title}`}
-                    className={`rounded border px-3 py-1 ${focus}`}
+                    className={btnOutline}
                   >
                     Edit and approve
                   </Link>
@@ -130,7 +131,7 @@ export default async function ReviewQueue({
                     <button
                       type="submit"
                       aria-label={`Reject: ${e.title}`}
-                      className={`rounded bg-red-700 px-3 py-1 text-white ${focus}`}
+                      className={btnReject}
                     >
                       Reject
                     </button>

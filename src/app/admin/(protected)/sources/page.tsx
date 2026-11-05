@@ -22,7 +22,7 @@ export default async function SourcesPage() {
         The importer only fetches active iCal sources on the approved Luma
         allowlist (see SOURCES.md), at most every 6 hours.
       </p>
-      <ul className="mt-4 divide-y rounded border">
+      <ul className="mt-4 divide-y divide-border rounded-lg border border-border bg-card">
         {sources.map((s) => (
           <li key={s.id} className="p-3 text-sm">
             <p className="font-medium">
@@ -43,7 +43,9 @@ export default async function SourcesPage() {
               {" · "}Last fetched: {fmt(s.lastFetchedAt)}
             </p>
             {s.lastError && (
-              <p className="text-destructive">Last error: {s.lastError}</p>
+              <p className="mt-1 rounded-md border border-red-600 bg-red-50 p-2 text-red-950 dark:bg-red-950/40 dark:text-red-100">
+                Last error: {s.lastError}
+              </p>
             )}
           </li>
         ))}

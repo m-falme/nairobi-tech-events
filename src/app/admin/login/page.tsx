@@ -2,7 +2,14 @@ import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
 import { auth, signIn } from "@/auth";
 import { isAdmin } from "@/lib/authz";
-import { focus, shell } from "@/lib/ui";
+import {
+  alertError,
+  btnPrimary,
+  input,
+  label,
+  pageTitle,
+  shell,
+} from "@/lib/ui";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -28,18 +35,20 @@ export default async function LoginPage({
 }) {
   if (isAdmin(await auth())) redirect("/admin");
   const { error } = await searchParams;
-  const input = `mt-1 w-full rounded border px-2 py-1 ${focus}`;
   return (
     <main className={cn(shell, "max-w-sm")}>
-      <h1 className="text-2xl font-bold tracking-tight">Admin sign in</h1>
+      <h1 className={pageTitle}>Admin sign in</h1>
       {error && (
-        <p role="alert" className="mt-3 text-destructive">
+        <p role="alert" className={`mt-3 ${alertError}`}>
           Sign-in failed. Check your details or try again later.
         </p>
       )}
-      <form action={login} className="mt-4 grid gap-3">
+      <form
+        action={login}
+        className="mt-4 grid gap-4 rounded-lg border border-border bg-card p-4"
+      >
         <div>
-          <label htmlFor="email" className="block text-sm font-medium">
+          <label htmlFor="email" className={label}>
             Email
           </label>
           <input
@@ -52,7 +61,7 @@ export default async function LoginPage({
           />
         </div>
         <div>
-          <label htmlFor="password" className="block text-sm font-medium">
+          <label htmlFor="password" className={label}>
             Password
           </label>
           <input
@@ -64,10 +73,7 @@ export default async function LoginPage({
             className={input}
           />
         </div>
-        <button
-          type="submit"
-          className={`rounded bg-primary px-4 py-1 text-primary-foreground ${focus}`}
-        >
+        <button type="submit" className={btnPrimary}>
           Sign in
         </button>
       </form>
