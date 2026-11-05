@@ -4,7 +4,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { PLATFORM_SUMMARY, toPublicSource } from "@/lib/public-sources";
 import { SITE_NAME } from "@/lib/site";
-import { focus } from "@/lib/ui";
+import { focus, shell } from "@/lib/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -22,12 +22,14 @@ export default async function SourcesPage() {
   const sources = rows.map(toPublicSource);
 
   return (
-    <main className="mx-auto max-w-3xl p-8">
+    <main className={shell}>
       <Link href="/" className={`text-sm underline ${focus}`}>
         ← All events
       </Link>
-      <h1 className="mt-4 text-3xl font-bold">Where listings come from</h1>
-      <p className="mt-2 text-gray-700">
+      <h1 className="mt-4 text-3xl font-bold tracking-tight">
+        Where listings come from
+      </h1>
+      <p className="mt-2 text-muted-foreground">
         We never scrape websites. Events come from official feeds we have
         approval to use, and from community submissions that an admin reviews
         before they appear. Every listing links back to its official page.
@@ -102,7 +104,7 @@ export default async function SourcesPage() {
           : reviewed by an admin before they are listed
         </li>
       </ul>
-      <p className="mt-6 text-sm text-gray-700">
+      <p className="mt-6 text-sm text-muted-foreground">
         The full policy, including terms checks for each platform, is in
         SOURCES.md in the project repository.
       </p>

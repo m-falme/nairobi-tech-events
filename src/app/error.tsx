@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
-import { focus } from "@/lib/ui";
+import { focus, shell } from "@/lib/ui";
 
 export default function ErrorPage({
   error,
@@ -16,15 +16,17 @@ export default function ErrorPage({
   }, [error]);
 
   return (
-    <main className="mx-auto max-w-3xl p-8">
+    <main className={shell}>
       <title>Something went wrong · Nairobi Tech Events</title>
       <div role="alert">
-        <h1 className="text-2xl font-bold">Something went wrong</h1>
-        <p className="mt-2 text-gray-700">
+        <h1 className="text-2xl font-bold tracking-tight">
+          Something went wrong
+        </h1>
+        <p className="mt-2 text-muted-foreground">
           We couldn&apos;t load this page. Please try again in a moment.
         </p>
         {error.digest && (
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-muted-foreground">
             Reference: {error.digest}
           </p>
         )}
@@ -33,7 +35,7 @@ export default function ErrorPage({
         <button
           type="button"
           onClick={reset}
-          className={`rounded bg-blue-700 px-4 py-1 text-white ${focus}`}
+          className={`rounded bg-primary px-4 py-1 text-primary-foreground ${focus}`}
         >
           Try again
         </button>

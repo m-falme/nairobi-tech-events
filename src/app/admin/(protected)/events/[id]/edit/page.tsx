@@ -15,7 +15,7 @@ export default async function EditPage({
   if (!e || e.status !== "pending") notFound();
   return (
     <main className="mt-6">
-      <h1 className="text-2xl font-bold">Edit and approve</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Edit and approve</h1>
       <EditForm
         event={{
           id: e.id,

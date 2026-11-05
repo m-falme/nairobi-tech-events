@@ -38,7 +38,7 @@ function Field({
       </label>
       {children}
       {errors?.length ? (
-        <p id={`${name}-error`} className="text-sm text-red-700">
+        <p id={`${name}-error`} className="text-sm text-destructive">
           {errors.join(", ")}
         </p>
       ) : null}
@@ -59,7 +59,7 @@ export function EditForm({ event }: { event: Values }) {
   return (
     <form action={action} className="mt-4 grid gap-3">
       {state.error && (
-        <p role="alert" className="text-red-700">
+        <p role="alert" className="text-destructive">
           {state.error}
         </p>
       )}

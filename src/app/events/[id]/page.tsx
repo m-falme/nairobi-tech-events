@@ -1,3 +1,4 @@
+import { focus, shell } from "@/lib/ui";
 import { ExternalLink } from "@/components/external-link";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -14,9 +15,6 @@ import { formatEventDate } from "@/lib/format";
 import { safeHref } from "@/lib/url";
 
 export const dynamic = "force-dynamic";
-
-const focus =
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700";
 
 const getEvent = cache((id: string) =>
   findPublicEvent(
@@ -44,18 +42,18 @@ export default async function EventPage({ params }: Props) {
   const phase = eventPhase(event.startsAt, event.endsAt);
 
   return (
-    <main className="mx-auto max-w-3xl p-8">
+    <main className={shell}>
       <Link href="/" className={`text-sm underline ${focus}`}>
         ← All events
       </Link>
       <article className="mt-4">
-        <h1 className="text-3xl font-bold">{event.title}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{event.title}</h1>
         {phase !== "upcoming" && (
           <p
             className={`mt-2 inline-block rounded px-2 py-0.5 text-sm font-medium ${
               phase === "live"
-                ? "bg-green-100 text-green-900"
-                : "bg-gray-200 text-gray-800"
+                ? "bg-green-100 dark:bg-green-900/40 text-green-900 dark:text-green-200"
+                : "bg-secondary text-secondary-foreground"
             }`}
           >
             {PHASE_LABEL[phase]}
@@ -95,7 +93,7 @@ export default async function EventPage({ params }: Props) {
         {href && (
           <ExternalLink
             href={href}
-            className={`mt-6 inline-block rounded bg-blue-700 px-4 py-2 text-white hover:bg-blue-800 ${focus}`}
+            className={`mt-6 inline-block rounded bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 ${focus}`}
           >
             Official event page
           </ExternalLink>

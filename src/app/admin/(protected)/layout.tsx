@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireAdminPage } from "@/lib/admin-session";
-import { focus } from "@/lib/ui";
+import { focus, shell } from "@/lib/ui";
 import { logout } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +12,7 @@ export default async function AdminLayout({
 }) {
   const session = await requireAdminPage();
   return (
-    <div className="mx-auto max-w-4xl p-8">
+    <div className={shell}>
       <header className="flex items-center justify-between border-b pb-3">
         <nav aria-label="Admin" className="flex gap-4">
           <Link href="/admin" className={`font-semibold ${focus}`}>

@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
 import { auth, signIn } from "@/auth";
 import { isAdmin } from "@/lib/authz";
-import { focus } from "@/lib/ui";
+import { focus, shell } from "@/lib/ui";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -29,10 +30,10 @@ export default async function LoginPage({
   const { error } = await searchParams;
   const input = `mt-1 w-full rounded border px-2 py-1 ${focus}`;
   return (
-    <main className="mx-auto max-w-sm p-8">
-      <h1 className="text-2xl font-bold">Admin sign in</h1>
+    <main className={cn(shell, "max-w-sm")}>
+      <h1 className="text-2xl font-bold tracking-tight">Admin sign in</h1>
       {error && (
-        <p role="alert" className="mt-3 text-red-700">
+        <p role="alert" className="mt-3 text-destructive">
           Sign-in failed. Check your details or try again later.
         </p>
       )}
@@ -65,7 +66,7 @@ export default async function LoginPage({
         </div>
         <button
           type="submit"
-          className={`rounded bg-blue-700 px-4 py-1 text-white ${focus}`}
+          className={`rounded bg-primary px-4 py-1 text-primary-foreground ${focus}`}
         >
           Sign in
         </button>
