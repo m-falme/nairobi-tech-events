@@ -112,24 +112,27 @@ export default async function ReviewQueue({
                     <input type="hidden" name="id" value={e.id} />
                     <button
                       type="submit"
+                      aria-label={`Approve: ${e.title}`}
                       className={`rounded bg-green-700 px-3 py-1 text-white ${focus}`}
                     >
-                      Approve<span className="sr-only">: {e.title}</span>
+                      Approve
                     </button>
                   </form>
                   <Link
                     href={`/admin/events/${e.id}/edit`}
+                    aria-label={`Edit and approve: ${e.title}`}
                     className={`rounded border px-3 py-1 ${focus}`}
                   >
-                    Edit and approve<span className="sr-only">: {e.title}</span>
+                    Edit and approve
                   </Link>
                   <form action={rejectEvent}>
                     <input type="hidden" name="id" value={e.id} />
                     <button
                       type="submit"
+                      aria-label={`Reject: ${e.title}`}
                       className={`rounded bg-red-700 px-3 py-1 text-white ${focus}`}
                     >
-                      Reject<span className="sr-only">: {e.title}</span>
+                      Reject
                     </button>
                   </form>
                 </div>

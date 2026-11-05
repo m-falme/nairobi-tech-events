@@ -137,6 +137,22 @@ export function SubmitForm() {
         </select>
         <Err n="type" />
       </div>
+      <div className="flex items-center gap-2">
+        <input
+          id="isOnline"
+          name="isOnline"
+          type="checkbox"
+          defaultChecked={v.isOnline === "on"}
+          className={focus}
+          aria-describedby="isOnline-hint"
+        />
+        <label htmlFor="isOnline" className="text-sm font-medium">
+          Online event
+        </label>
+        <span id="isOnline-hint" className="text-sm text-gray-700">
+          (venue is optional)
+        </span>
+      </div>
       <div>
         <label htmlFor="venue" className="block text-sm font-medium">
           Venue (optional)

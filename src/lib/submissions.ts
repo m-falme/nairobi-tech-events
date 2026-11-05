@@ -2,7 +2,13 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import { EVENT_TYPES } from "./filters";
 import { HONEYPOT_FIELD, type SubmitState } from "./submission-form";
-import { eatDateTime, formToObject, httpUrl, optionalText } from "./review";
+import {
+  checkbox,
+  eatDateTime,
+  formToObject,
+  httpUrl,
+  optionalText,
+} from "./review";
 
 export { HONEYPOT_FIELD, type SubmitState };
 export const RATE_LIMIT = 5;
@@ -18,6 +24,8 @@ export const submissionSchema = z
       .transform((v) => (v === "" || v === undefined ? null : v)),
     url: httpUrl,
     type: z.enum(EVENT_TYPES, { message: "Choose a type" }),
+    /** "Online event" checkbox; venue stays optional either way. */
+    isOnline: checkbox,
     venue: optionalText(200),
     description: z
       .string()
@@ -117,7 +125,10 @@ export async function submitCore(
     const { [HONEYPOT_FIELD]: _hp, ...values } = raw;
     void _hp;
     return {
-      errors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+      errors: z.flattenError(parsed.error).fieldErrors as Record<
+        string,
+        string[]
+      >,
       values,
     };
   }
@@ -126,7 +137,6 @@ export async function submitCore(
   await deps.db.event.create({
     data: {
       ...parsed.data,
-      isOnline: false,
       status: "pending",
       sourceId: null,
     },

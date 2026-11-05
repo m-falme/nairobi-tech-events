@@ -155,6 +155,36 @@ describe("submitCore", () => {
       url: "https://lu.ma/x",
     });
   });
+  it("defaults to in person when the Online box is unticked", async () => {
+    const { db, events } = fakeDb();
+    await submitCore({ db, ipHash: "h", now }, form(valid));
+    expect(events[0]).toMatchObject({ isOnline: false, venue: null });
+  });
+  it("saves isOnline when the Online event box is ticked, venue optional", async () => {
+    const { db, events } = fakeDb();
+    const r = await submitCore(
+      { db, ipHash: "h", now },
+      form({ ...valid, isOnline: "on" }),
+    );
+    expect(r).toEqual({ status: "pending-review" });
+    expect(events[0]).toMatchObject({ isOnline: true, venue: null });
+  });
+  it("keeps a venue for online events when given", () => {
+    const r = submissionSchema.safeParse({
+      ...valid,
+      isOnline: "on",
+      venue: "Zoom",
+    });
+    expect(r.success && r.data).toMatchObject({
+      isOnline: true,
+      venue: "Zoom",
+    });
+  });
+  it("rejects unexpected isOnline values", () => {
+    expect(
+      submissionSchema.safeParse({ ...valid, isOnline: "yes" }).success,
+    ).toBe(false);
+  });
   it("honeypot: looks successful but saves nothing and uses no quota", async () => {
     const { db, events, attempts } = fakeDb();
     const r = await submitCore(

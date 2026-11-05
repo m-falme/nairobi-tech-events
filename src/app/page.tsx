@@ -41,6 +41,10 @@ export default async function Home({
         <Link href="/submit" className={`underline ${focus}`}>
           Submit an event
         </Link>
+        {" · "}
+        <Link href="/sources" className={`underline ${focus}`}>
+          Where listings come from
+        </Link>
       </p>
 
       <form

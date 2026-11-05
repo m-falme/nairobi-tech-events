@@ -8,6 +8,7 @@ import {
   findPublicEvent,
   type DetailEvent,
 } from "@/lib/event-detail";
+import { eventPhase, PHASE_LABEL } from "@/lib/event-phase";
 import { formatEventDate } from "@/lib/format";
 import { safeHref } from "@/lib/url";
 
@@ -39,6 +40,7 @@ export default async function EventPage({ params }: Props) {
   const event = await getEvent(id);
   if (!event) notFound();
   const href = safeHref(event.url);
+  const phase = eventPhase(event.startsAt, event.endsAt);
 
   return (
     <main className="mx-auto max-w-3xl p-8">
@@ -47,6 +49,17 @@ export default async function EventPage({ params }: Props) {
       </Link>
       <article className="mt-4">
         <h1 className="text-3xl font-bold">{event.title}</h1>
+        {phase !== "upcoming" && (
+          <p
+            className={`mt-2 inline-block rounded px-2 py-0.5 text-sm font-medium ${
+              phase === "live"
+                ? "bg-green-100 text-green-900"
+                : "bg-gray-200 text-gray-800"
+            }`}
+          >
+            {PHASE_LABEL[phase]}
+          </p>
+        )}
         <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
           <dt className="font-medium">When</dt>
           <dd>
