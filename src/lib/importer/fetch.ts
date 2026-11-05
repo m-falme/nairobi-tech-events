@@ -1,7 +1,7 @@
 import { approvedLumaCalendar } from "./allowlist";
 
 export const DEFAULT_USER_AGENT =
-  "NairobiTechEventsBot/1.0 (+mailto:mburumark096@gmail.com)";
+  "NairobiTechEventsBot/1.0 (+https://github.com/m-falme/nairobi-tech-events)";
 export const MAX_BYTES = 5 * 1024 * 1024;
 export const MAX_REDIRECTS = 3;
 export const MAX_DELAY_MS = 60_000;

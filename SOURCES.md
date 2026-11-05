@@ -10,7 +10,7 @@ Last checked: 2026-11-05 (Luma approval recorded; robots.txt files re-fetched 20
 
 - Poll at most every 6 hours.
 - One request per calendar per run.
-- User-Agent: `NairobiTechEventsBot/1.0 (+mailto:mburumark096@gmail.com)`.
+- User-Agent: `NairobiTechEventsBot/1.0 (+https://github.com/m-falme/nairobi-tech-events)`.
 - Exponential backoff (retry) only on network errors, 429 and 5xx responses, honouring `Retry-After` (capped at 60s); other 4xx responses fail the source for that run without retrying.
 - Redirects are followed manually (at most 3), and every hop must still be an approved Luma calendar feed URL.
 - Response bodies are capped at 5 MB.
