@@ -27,7 +27,7 @@ async function expectNoAxeViolations(page: Page, label: string) {
 }
 
 for (const theme of ["light", "dark"] as const) {
-  test(`axe: public and admin pages (${theme})`, async ({ page }) => {
+  test(`axe: public pages (${theme})`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: theme });
     await page.addInitScript((t) => localStorage.setItem("theme", t), theme);
 
@@ -52,13 +52,43 @@ for (const theme of ["light", "dark"] as const) {
       await page.goto(path);
       await expectNoAxeViolations(page, `${path} (${theme})`);
     }
+  });
 
+  test(`axe: admin pages (${theme})`, async ({ page }) => {
     test.skip(!ADMIN_PASSWORD, "ADMIN_SEED_PASSWORD is not set");
+    await page.emulateMedia({ colorScheme: theme });
+    await page.addInitScript((t) => localStorage.setItem("theme", t), theme);
+
+    // A pending event so the queue and edit form have content.
+    const title = `A11y pending ${theme} ${Date.now()}`;
+    const d = new Date(Date.now() + 3 * 3600_000 + 5 * 86_400_000);
+    await page.goto("/submit");
+    await page.getByLabel("Title (required)").fill(title);
+    await page
+      .getByLabel("Starts, EAT (required)")
+      .fill(`${d.toISOString().slice(0, 10)}T18:00`);
+    await page
+      .getByLabel("Official event URL (required)")
+      .fill(`https://example.com/a11y-${theme}-${Date.now()}`);
+    await page.getByLabel("Type (required)").selectOption("meetup");
+    await page.getByLabel("Online event").check();
+    await page.getByRole("button", { name: "Submit for review" }).click();
+    await expect(page.getByRole("status")).toContainText("pending review");
+
+    await page.goto("/admin/login");
     await page.getByLabel("Email").fill(ADMIN_EMAIL);
     await page.getByLabel("Password").fill(ADMIN_PASSWORD);
     await page.getByRole("button", { name: "Sign in" }).click();
     await expect(page).toHaveURL(/\/admin$/);
+    await expect(page.locator("html")).toHaveClass(new RegExp(theme));
     await expectNoAxeViolations(page, `/admin (${theme})`);
+
+    await page
+      .getByRole("link", { name: `Edit and approve: ${title}` })
+      .click();
+    await expect(page).toHaveURL(/\/admin\/events\/.+\/edit$/);
+    await expectNoAxeViolations(page, `admin edit (${theme})`);
+
     await page.goto("/admin/sources");
     await expectNoAxeViolations(page, `/admin/sources (${theme})`);
   });
@@ -116,3 +146,29 @@ test("keyboard: skip link is first and focus is visible", async ({ page }) => {
   );
   expect(outline).not.toBe("none");
 });
+
+for (const theme of ["light", "dark"] as const) {
+  test(`keyboard: theme toggle shows a focus outline (${theme})`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme: theme });
+    await page.goto("/");
+    const toggle = page.getByRole("button", {
+      name: /Switch to (dark|light) theme/,
+    });
+    await expect(toggle).toBeEnabled();
+    // Tab until the toggle has focus (skip link, brand, 3 nav links, toggle).
+    for (let i = 0; i < 10; i++) {
+      await page.keyboard.press("Tab");
+      if (await toggle.evaluate((el) => el === document.activeElement)) break;
+    }
+    await expect(toggle).toBeFocused();
+    const style = await toggle.evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { s: cs.outlineStyle, w: cs.outlineWidth, c: cs.outlineColor };
+    });
+    expect(style.s).not.toBe("none");
+    expect(parseFloat(style.w)).toBeGreaterThanOrEqual(2);
+    expect(style.c).not.toBe("rgba(0, 0, 0, 0)");
+  });
+}

@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { focus } from "@/lib/ui";
 
-const cls = `size-11 focus-visible:ring-0 focus-visible:ring-offset-0 ${focus}`;
+const cls = `size-11 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-solid ${focus}`;
 
 /** Header control: toggles light/dark; choice persists via next-themes. */
 export function ThemeToggle() {
