@@ -55,7 +55,9 @@ export const submissionSchema = z
 export function trustedProxy(
   env: Record<string, string | undefined> = process.env,
 ): boolean {
-  const v = (env.TRUSTED_PROXY ?? env.TRUST_X_FORWARDED_FOR ?? "")
+  // Use || so an empty TRUSTED_PROXY= in .env still falls through to
+  // TRUST_X_FORWARDED_FOR (?? only skips null/undefined).
+  const v = (env.TRUSTED_PROXY || env.TRUST_X_FORWARDED_FOR || "")
     .trim()
     .toLowerCase();
   return v === "1" || v === "true" || v === "yes";

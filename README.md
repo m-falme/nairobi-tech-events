@@ -9,7 +9,7 @@ cp .env.example .env   # set AUTH_SECRET and ADMIN_SEED_PASSWORD first
 docker compose up --build
 ```
 
-Rate limits (admin login failures and public submissions) key off a salted IP hash. Set `TRUSTED_PROXY=true` (or `TRUST_X_FORWARDED_FOR=true`) in production behind Vercel or one reverse proxy so the app uses the rightmost `X-Forwarded-For` hop the proxy added. Leave it unset locally: forged `X-Forwarded-For` headers are ignored and every request shares a `"direct"` bucket.
+Rate limits (admin login failures and public submissions) key off a salted IP hash. Set `TRUSTED_PROXY=true` (or `TRUST_X_FORWARDED_FOR=true`) in production behind Vercel or one reverse proxy so the app uses the rightmost `X-Forwarded-For` hop the proxy added. Leave it unset locally (or when not behind a proxy): forged `X-Forwarded-For` headers are ignored and **every request shares a single `"direct"` bucket**, so a busy shared IP can hit the limit for everyone on that host. Compose passes `TRUSTED_PROXY` through from `.env`.
 
 Before starting, set `AUTH_SECRET` in `.env` (generate one: `openssl rand -base64 32`). `AUTH_TRUST_HOST=true` is needed when self-hosting (Docker, `next start`) so Auth.js trusts the Host header; Compose sets it for the app.
 
