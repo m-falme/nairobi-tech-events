@@ -10,6 +10,8 @@ import {
 } from "@/lib/filters";
 import { EventCard } from "@/components/event-card";
 import { typeLabel } from "@/lib/event-type";
+import { formatIsoDay } from "@/lib/format";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +20,13 @@ export default async function Home({
 }: {
   searchParams: Promise<RawSearchParams>;
 }) {
-  const filters = parseFilters(await searchParams);
+  const raw = await searchParams;
+  const filters = parseFilters(raw);
+  // Native GET forms send empty fields (q=&range=); redirect to a clean URL.
+  const hasEmpty = Object.values(raw).some((v) =>
+    Array.isArray(v) ? v.some((x) => x === "") : v === "",
+  );
+  if (hasEmpty) redirect(`/${toQueryString(filters)}`);
   const { events, count, page } = await listEvents(filters);
   const pages = totalPages(count);
   const hasFilters = Boolean(
@@ -30,23 +38,30 @@ export default async function Home({
     filters.to,
   );
 
-  const chips: { label: string; href: string }[] = [];
+  const chips: { kind: string; label: string; href: string }[] = [];
   const without = (o: Partial<typeof filters>) =>
     `/${toQueryString(filters, { ...o, page: 1 })}`;
   if (filters.q)
-    chips.push({ label: `“${filters.q}”`, href: without({ q: undefined }) });
+    chips.push({
+      kind: "search",
+      label: `“${filters.q}”`,
+      href: without({ q: undefined }),
+    });
   for (const t of filters.type ?? [])
     chips.push({
+      kind: "type",
       label: typeLabel(t),
       href: without({ type: filters.type?.filter((x) => x !== t) }),
     });
   if (filters.format)
     chips.push({
+      kind: "format",
       label: filters.format === "online" ? "Online" : "In person",
       href: without({ format: undefined }),
     });
   if (filters.range)
     chips.push({
+      kind: "range",
       label: { today: "Today", week: "This week", month: "This month" }[
         filters.range
       ],
@@ -54,11 +69,16 @@ export default async function Home({
     });
   if (filters.from)
     chips.push({
-      label: `From ${filters.from}`,
+      kind: "from",
+      label: `From ${formatIsoDay(filters.from)}`,
       href: without({ from: undefined }),
     });
   if (filters.to)
-    chips.push({ label: `To ${filters.to}`, href: without({ to: undefined }) });
+    chips.push({
+      kind: "to",
+      label: `To ${formatIsoDay(filters.to)}`,
+      href: without({ to: undefined }),
+    });
 
   const control = `mt-1 block min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm ${focus}`;
   const labelCls = "block text-sm font-medium";
@@ -206,7 +226,7 @@ export default async function Home({
               <Link
                 href={c.href}
                 aria-label={
-                  c.label.startsWith("“")
+                  c.kind === "search"
                     ? "Remove search filter"
                     : `Remove filter ${c.label}`
                 }
@@ -247,7 +267,7 @@ export default async function Home({
         >
           {events.map((e) => (
             <li key={e.id}>
-              <EventCard e={e} />
+              <EventCard e={e} back={toQueryString(filters)} />
             </li>
           ))}
         </ul>
@@ -269,7 +289,7 @@ export default async function Home({
           ) : (
             <span />
           )}
-          <span aria-current="page">
+          <span>
             Page {page} of {pages}
           </span>
           {page < pages ? (

@@ -14,7 +14,7 @@ type CardEvent = {
 };
 
 /** Whole card is one target: the title link stretches over the card. */
-export function EventCard({ e }: { e: CardEvent }) {
+export function EventCard({ e, back = "" }: { e: CardEvent; back?: string }) {
   return (
     <article className="group relative flex h-full flex-col gap-2 rounded-lg border border-border bg-card p-4 text-card-foreground shadow-sm transition-colors hover:border-primary/60 hover:bg-accent/40 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-ring">
       <span
@@ -24,7 +24,7 @@ export function EventCard({ e }: { e: CardEvent }) {
       </span>
       <h2 className="text-lg font-semibold leading-snug">
         <Link
-          href={`/events/${e.id}`}
+          href={`/events/${e.id}${back ? `?back=${encodeURIComponent(back)}` : ""}`}
           className="after:absolute after:inset-0 after:rounded-lg focus-visible:outline-none group-hover:underline"
         >
           {e.title}

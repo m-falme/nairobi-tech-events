@@ -13,18 +13,27 @@ export default async function AdminLayout({
   const session = await requireAdminPage();
   return (
     <div className={shell}>
-      <header className="flex items-center justify-between border-b pb-3">
-        <nav aria-label="Admin" className="flex gap-4">
-          <Link href="/admin" className={`font-semibold ${focus}`}>
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
+        <nav aria-label="Admin" className="flex flex-wrap gap-1">
+          <Link
+            href="/admin"
+            className={`inline-flex min-h-11 items-center rounded-md px-3 font-semibold hover:bg-accent ${focus}`}
+          >
             Review queue
           </Link>
-          <Link href="/admin/sources" className={`font-semibold ${focus}`}>
+          <Link
+            href="/admin/sources"
+            className={`inline-flex min-h-11 items-center rounded-md px-3 font-semibold hover:bg-accent ${focus}`}
+          >
             Sources
           </Link>
         </nav>
         <form action={logout} className="flex items-center gap-3 text-sm">
-          <span>{session.user?.email}</span>
-          <button type="submit" className={`underline ${focus}`}>
+          <span className="text-muted-foreground">{session.user?.email}</span>
+          <button
+            type="submit"
+            className={`inline-flex min-h-11 items-center px-2 underline ${focus}`}
+          >
             Sign out
           </button>
         </form>

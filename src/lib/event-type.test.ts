@@ -24,3 +24,11 @@ describe("formatCardDate", () => {
     );
   });
 });
+
+import { formatIsoDay } from "./format";
+describe("formatIsoDay", () => {
+  it("converts", () => {
+    expect(formatIsoDay("2026-11-05")).toBe("05/11/2026");
+    expect(formatIsoDay("bad")).toBe("bad");
+  });
+});

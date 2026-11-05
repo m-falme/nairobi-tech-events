@@ -82,6 +82,26 @@ test("submit → admin approves → listed → filters", async ({ page }) => {
   await page.getByRole("link", { name: title }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
   await expect(page).toHaveTitle(`${title} · Nairobi Tech Events`);
+
+  // 7. Back link keeps every type and the date range.
+  const day = (offset: number) =>
+    new Date(Date.now() + 3 * 3600_000 + offset * 86400_000)
+      .toISOString()
+      .slice(0, 10);
+  const listQs = `?q=${encodeURIComponent(title)}&type=meetup&type=workshop&type=hackathon&from=${day(0)}&to=${day(10)}`;
+  await page.goto(`/${listQs}`);
+  await page.getByRole("link", { name: title }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
+  await page.getByRole("link", { name: /Back to filtered events/ }).click();
+  await expect(page.getByRole("link", { name: title })).toBeVisible();
+  const url = new URL(page.url());
+  expect(url.searchParams.getAll("type")).toEqual([
+    "meetup",
+    "workshop",
+    "hackathon",
+  ]);
+  expect(url.searchParams.get("from")).toBe(day(0));
+  expect(url.searchParams.get("to")).toBe(day(10));
 });
 
 test("unknown event shows the 404 page with its title", async ({ page }) => {

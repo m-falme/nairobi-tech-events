@@ -30,3 +30,18 @@ const timeFmt = new Intl.DateTimeFormat("en-GB", {
 export function formatCardDate(d: Date): string {
   return `${dateFmt.format(d)} · ${timeFmt.format(d)} EAT`;
 }
+
+/** "yyyy-mm-dd" → "dd/mm/yyyy" (filter chips). */
+export function formatIsoDay(s: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : s;
+}
+
+const dayKey = (d: Date) => dateFmt.format(d);
+
+/** End of a range: time only when it is the same EAT day as the start. */
+export function formatEndDate(start: Date, end: Date): string {
+  return dayKey(start) === dayKey(end)
+    ? `${timeFmt.format(end)} EAT`
+    : formatCardDate(end);
+}

@@ -2,10 +2,8 @@
 
 import { useActionState } from "react";
 import { SOURCE_KINDS, type SourceFormState } from "@/lib/sources-admin";
-import { focus } from "@/lib/ui";
+import { btnPrimary, focus, input, label } from "@/lib/ui";
 import { addSource } from "./actions";
-
-const input = `mt-1 w-full rounded border px-2 py-1 ${focus}`;
 
 export function SourceForm() {
   const [state, action, pending] = useActionState<SourceFormState, FormData>(
@@ -32,7 +30,7 @@ export function SourceForm() {
         </p>
       )}
       <div>
-        <label htmlFor="src-name" className="block text-sm font-medium">
+        <label htmlFor="src-name" className={label}>
           Name
         </label>
         <input
@@ -46,7 +44,7 @@ export function SourceForm() {
         <Err n="name" />
       </div>
       <div>
-        <label htmlFor="src-kind" className="block text-sm font-medium">
+        <label htmlFor="src-kind" className={label}>
           Type
         </label>
         <select
@@ -65,7 +63,7 @@ export function SourceForm() {
         <Err n="kind" />
       </div>
       <div>
-        <label htmlFor="src-url" className="block text-sm font-medium">
+        <label htmlFor="src-url" className={label}>
           Feed URL
         </label>
         <input
@@ -84,18 +82,14 @@ export function SourceForm() {
           id="src-trusted"
           name="trusted"
           type="checkbox"
-          className={focus}
+          className={`size-5 accent-primary ${focus}`}
         />
         <label htmlFor="src-trusted" className="text-sm">
           Trusted (imported events are auto-approved)
         </label>
       </div>
       <div>
-        <button
-          type="submit"
-          disabled={pending}
-          className={`rounded bg-primary px-4 py-2 text-primary-foreground disabled:opacity-60 ${focus}`}
-        >
+        <button type="submit" disabled={pending} className={btnPrimary}>
           {pending ? "Adding…" : "Add source"}
         </button>
       </div>
